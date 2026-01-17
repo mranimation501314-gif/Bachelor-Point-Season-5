@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point S5 - Pro Panel</title>
+    <title>Bachelor Point S5 - Admin Pro Panel</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -11,7 +11,22 @@
     
     <style>
         :root { --primary: #e63946; --secondary: #1d3557; --bg: #f0f2f5; --white: #ffffff; }
-        body { background: var(--bg); color: #222; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        /* ডিফল্টভাবে কপি করা বন্ধ রাখা হয়েছে */
+        body { 
+            background: var(--bg); color: #222; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 0; 
+            user-select: none; 
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        /* এডমিন যদি লগইন থাকে তবে টাইটেল কপি করা যাবে */
+        .admin-mode .video-title { 
+            user-select: text !important; 
+            -webkit-user-select: text !important; 
+        }
         
         /* Header Section */
         .header-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 45px 20px 75px; text-align: center; color: white; border-radius: 0 0 45px 45px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
@@ -22,28 +37,25 @@
         .cat-btn { padding: 10px 20px; border-radius: 15px; border: 1.5px solid var(--primary); background: transparent; color: var(--primary); font-weight: bold; cursor: pointer; font-size: 13px; white-space: nowrap; transition: 0.3s; }
         .cat-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; }
         
-        /* Search Container */
+        /* Search Box */
         .search-container { padding: 0 20px 15px; }
         .search-box { width: 100%; padding: 15px; border-radius: 18px; border: 2px solid #ddd; font-size: 16px; outline: none; box-sizing: border-box; background: white; transition: 0.3s; }
-        .search-box:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(230,57,70,0.1); }
 
         /* Video Display Grid */
         .main-content { padding: 10px 20px 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: var(--white); border-radius: 25px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align: center; padding-bottom: 20px; border: 1px solid #f0f0f0; transition: 0.3s; }
+        .card { background: var(--white); border-radius: 25px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align: center; padding-bottom: 20px; border: 1px solid #f0f0f0; }
         .thumb-box { width: 100%; height: 170px; overflow: hidden; }
         .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Details & Buttons */
         .card-details { padding: 15px; }
-        .card-details h3 { margin: 5px 0 10px; font-size: 17px; color: #333; height: 40px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 12px; font-weight: bold; color: #555; }
+        .video-title { margin: 5px 0 10px; font-size: 17px; color: #333; height: 40px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         
-        .unlock-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 14px; width: 95%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.3s; }
+        .unlock-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 14px; width: 95%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 15px; }
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
 
-        /* ভেরিফিকেশন ওভারলে (আপনার স্ক্রিনশট অনুযায়ী) */
-        #verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; }
-        .verify-box { background: white; color: #333; padding: 40px 25px; border-radius: 35px; width: 85%; max-width: 320px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        /* ভেরিফিকেশন পপ-আপ */
+        #verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; }
+        .verify-box { background: white; color: #333; padding: 40px 25px; border-radius: 35px; width: 85%; max-width: 320px; text-align: center; }
         .loader-ring { width: 55px; height: 55px; border: 6px solid #f3f3f3; border-top: 6px solid #e63946; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -53,8 +65,8 @@
     <div id="verify-overlay">
         <div class="verify-box">
             <div class="loader-ring"></div>
-            <h2 style="margin: 0 0 10px; color: #e63946;">বিজ্ঞাপন যাচাই...</h2>
-            <p id="verify-msg" style="font-size: 14px; color: #666; line-height: 1.5;">দয়া করে ১০ সেকেন্ড অ্যাডের পাতায় অবস্থান করুন। ফিরে আসলে এটি অটোমেটিক সফল হবে।</p>
+            <h2 style="color: #e63946; margin-bottom: 10px;">বিজ্ঞাপন যাচাই...</h2>
+            <p style="font-size: 14px; color: #666;">১০ সেকেন্ড অ্যাডের পাতায় থাকুন। ফিরে আসলে অটোমেটিক সফল হবে।</p>
         </div>
     </div>
 
@@ -66,28 +78,33 @@
     </div>
 
     <div class="search-container">
-        <input type="number" id="videoSearch" class="search-box" placeholder="এপিসোড নাম্বার লিখুন (উদা: ৫)..." onkeyup="renderUI()">
+        <input type="number" id="videoSearch" class="search-box" placeholder="এপিসোড নাম্বার লিখুন..." onkeyup="renderUI()">
     </div>
 
     <div class="main-content" id="video-display">লোডিং হচ্ছে...</div>
 
     <script>
-        // Firebase Config
         const firebaseConfig = { databaseURL: "https://bachelor-point-season-5-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Constants
+        // এডমিন লিস্ট (আপনার আইডিগুলো এখানে দিন)
+        const ADMIN_IDS = [6856009995, 7486776029]; 
         const BOT_USERNAME = "Bachelor_Point_Season_5_ep_bot"; 
         const LOCK_TIME = 24 * 60 * 60 * 1000; 
         const REQUIRED_SEC = 10; 
 
+        // এডমিন প্রোটেকশন চেক
+        const currentUserId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+        if (ADMIN_IDS.includes(currentUserId)) {
+            document.body.classList.add('admin-mode');
+        }
+
         let allVideos = {};
         let currentCategory = "All";
 
-        // ১. ভিডিও ডাটা লোড করা
         db.ref('videos').on('value', (snap) => {
             allVideos = snap.val() || {};
             renderUI();
@@ -100,7 +117,6 @@
             renderUI();
         }
 
-        // ২. UI রেন্ডার করা (ধাপ ও ক্যাটাগরি সহ)
         function renderUI() {
             const container = document.getElementById('video-display');
             const searchInput = document.getElementById('videoSearch').value.trim();
@@ -110,7 +126,6 @@
                 const v = { ...allVideos[id], id: id };
                 if (currentCategory !== "All" && v.category !== currentCategory) continue;
 
-                // স্মার্ট সার্চ (শুধুমাত্র এপিসোড নাম্বার)
                 if (searchInput !== "") {
                     const regex = /(?:episode|ep|এপিসোড)\s*(\d+)/i;
                     const match = v.name.match(regex);
@@ -129,8 +144,8 @@
                     <div class="card">
                         <div class="thumb-box"><img src="${v.photo}"></div>
                         <div class="card-details">
-                            <h3>${v.name}</h3>
-                            <div class="info-row">
+                            <h3 class="video-title">${v.name}</h3>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:bold;">
                                 <span style="color:#e63946">ধাপ: ${step}/${total} 🚀</span>
                                 <span style="background:#f0f0f0;padding:2px 8px;border-radius:5px">${v.category}</span>
                             </div>
@@ -140,7 +155,6 @@
             }
         }
 
-        // ৩. বাটন ক্লিক হ্যান্ডলার
         function handleAction(v_id, ads) {
             const lastTime = localStorage.getItem('time_' + v_id);
             if (lastTime && (Date.now() - lastTime < LOCK_TIME)) {
@@ -158,51 +172,40 @@
                 return;
             }
 
-            // সিকিউরিটি ট্র্যাকিং শুরু
             localStorage.setItem('ad_active', 'true');
             localStorage.setItem('start_time', Date.now());
             localStorage.setItem('active_vid', v_id);
             localStorage.setItem('active_step', step);
 
             tg.openLink(ads[step]);
-            
-            // ভেরিফিকেশন পপ-আপ দেখানো
             document.getElementById('verify-overlay').style.display = 'flex';
         }
 
-        // ৪. ইউজার ফিরে আসলে অটোমেটিক ভেরিফিকেশন লজিক
         function verifyReturn() {
             if (localStorage.getItem('ad_active') === 'true') {
                 const startTime = parseInt(localStorage.getItem('start_time'));
                 const timeDiff = Math.floor((Date.now() - startTime) / 1000);
 
-                // ফিরে আসার পর ১.৫ সেকেন্ড লোডিং এনিমেশন (যাচাইয়ের অনুভূতির জন্য)
                 setTimeout(() => {
                     if (timeDiff >= REQUIRED_SEC) {
-                        // ১০ সেকেন্ড পূর্ণ হয়েছে
                         const vid = localStorage.getItem('active_vid');
                         const step = parseInt(localStorage.getItem('active_step'));
                         localStorage.setItem('step_' + vid, step + 1);
-                        
                         localStorage.removeItem('ad_active');
                         document.getElementById('verify-overlay').style.display = 'none';
                         renderUI();
-                        Swal.fire('সফল!', 'বিজ্ঞাপন যাচাই সম্পন্ন হয়েছে।', 'success');
+                        Swal.fire('সফল!', 'বিজ্ঞাপন যাচাই সম্পন্ন।', 'success');
                     } else {
-                        // ১০ সেকেন্ড হয়নি
                         localStorage.removeItem('ad_active');
                         document.getElementById('verify-overlay').style.display = 'none';
-                        Swal.fire('ব্যর্থ!', 'আপনি ১০ সেকেন্ড পূর্ণ হওয়ার আগেই ফিরে এসেছেন।', 'error');
+                        Swal.fire('ব্যর্থ!', 'আপনি ১০ সেকেন্ড পূর্ণ করেননি।', 'error');
                     }
-                    localStorage.removeItem('start_time');
                 }, 1500);
             }
         }
 
-        // উইন্ডো ফোকাস বা ফিরে আসার ইভেন্ট
         window.addEventListener('focus', verifyReturn);
         window.onload = verifyReturn;
-
     </script>
 </body>
 </html>
