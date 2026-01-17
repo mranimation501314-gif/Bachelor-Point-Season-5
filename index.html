@@ -17,6 +17,7 @@
             margin: 0; padding: 0; user-select: none; -webkit-user-select: none;
         }
         
+        /* টাইটেল কপি করার অনুমতি সবার জন্য */
         .video-title { user-select: text !important; -webkit-user-select: text !important; cursor: text; font-weight: bold; }
         
         .header-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 45px 20px 75px; text-align: center; color: white; border-radius: 0 0 45px 45px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
@@ -41,18 +42,8 @@
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
         .locked-btn { background: #555 !important; cursor: not-allowed; }
 
-        #verify-overlay { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); 
-            z-index: 10000; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            text-align: center; 
-        }
+        /* ভেরিফিকেশন পপ-আপ */
+        #verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
         .verify-box { background: white; color: #333; padding: 45px 25px; border-radius: 35px; width: 85%; max-width: 320px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         .loader-ring { width: 60px; height: 60px; border: 6px solid #f3f3f3; border-top: 6px solid #e63946; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 25px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -63,8 +54,8 @@
     <div id="verify-overlay">
         <div class="verify-box">
             <div class="loader-ring"></div>
-            <h2 style="color: #e63946; margin: 0 0 12px;">অ্যাড যাচাই হচ্ছে...</h2>
-            <p style="font-size: 14px; color: #666; line-height: 1.5;">অ্যাড পেজে ১০ সেকেন্ড অবস্থান করুন। ফিরে আসার সাথে সাথে ফলাফল পাবেন।</p>
+            <h2 style="color: #e63946; margin: 0 0 12px;">বিজ্ঞাপন যাচাই...</h2>
+            <p style="font-size: 14px; color: #666; line-height: 1.5;">অ্যাড পেজে ১০ সেকেন্ড অবস্থান করুন। ফিরে আসার সাথে সাথে সঠিক ফলাফল পাবেন।</p>
         </div>
     </div>
 
@@ -192,7 +183,7 @@
                 return;
             }
 
-            // ফিক্স: প্রতিবার ক্লিক করার সময় আগের সব ডেটা সম্পূর্ণ মুছে ফেলা
+            // প্রতিবার ক্লিকে আগের পুরাতন ট্র্যাকিং ডেটা সম্পূর্ণ পরিষ্কার করা
             localStorage.removeItem('ad_active');
             localStorage.removeItem('start_time');
             localStorage.removeItem('active_vid');
@@ -201,7 +192,7 @@
             // ওভারলে দেখানো
             document.getElementById('verify-overlay').style.display = 'flex';
             
-            // নতুন সেশন ডেটা সেট করা
+            // নতুন সেশন শুরু
             setTimeout(() => {
                 const now = Date.now();
                 localStorage.setItem('ad_active', 'true');
@@ -213,21 +204,21 @@
         }
 
         function verifyLogic() {
-            // শুধুমাত্র যদি অ্যাড সেশন অ্যাক্টিভ থাকে তবেই লজিক চলবে
             if (localStorage.getItem('ad_active') === 'true') {
                 const startTime = parseInt(localStorage.getItem('start_time'));
                 const currentTime = Date.now();
                 
-                // সেফটি ডিলে: ক্লিক করার ৪ সেকেন্ডের মধ্যে ফিরে আসলে ইগনোর করা হবে
-                if (currentTime - startTime < 4000) return;
+                // সেফটি ডিলে: ৩ সেকেন্ডের আগে ভুল ভেরিফিকেশন এড়াতে
+                if (currentTime - startTime < 3000) return;
 
-                const timeDiffSec = Math.floor((currentTime - startTime) / 1000);
+                // প্রতিবার ক্লিক করার পর ইউজার ঠিক কত সেকেন্ড ছিল তা নতুনভাবে বিয়োগ করা হচ্ছে
+                const actualTimeDiffSec = Math.floor((currentTime - startTime) / 1000);
 
-                // গুরুত্বপূর্ণ: সাথে সাথে স্ট্যাটাস বন্ধ করা যাতে দ্বিতীয়বার চেক না হয়
+                // সাথে সাথে স্ট্যাটাস ক্লিয়ার যাতে আগের রিপোর্ট রিপিট না হয়
                 localStorage.removeItem('ad_active');
                 document.getElementById('verify-overlay').style.display = 'none';
 
-                if (timeDiffSec >= REQUIRED_SEC) {
+                if (actualTimeDiffSec >= REQUIRED_SEC) {
                     const vid = localStorage.getItem('active_vid');
                     const step = parseInt(localStorage.getItem('active_step'));
                     localStorage.setItem('step_' + vid, (step + 1).toString());
@@ -235,35 +226,35 @@
                     Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে। অভিনন্দন!', icon: 'success', confirmButtonColor: '#00c853' });
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
-                    const remaining = REQUIRED_SEC - timeDiffSec;
+                    const rem = REQUIRED_SEC - actualTimeDiffSec;
+                    // ইউজারকে নির্ভুলভাবে জানানো যে সে এই প্রচেষ্টায় কত সেকেন্ড ছিল
                     Swal.fire({ 
                         title: 'ব্যর্থ!', 
-                        text: 'আপনি মাত্র ' + timeDiffSec + ' সেকেন্ড অপেক্ষা করেছেন। আরও ' + remaining + ' সেকেন্ড বাকি ছিল।', 
+                        text: 'আপনি এইবার মাত্র ' + actualTimeDiffSec + ' সেকেন্ড ছিলেন। আরও ' + rem + ' সেকেন্ড বাকি ছিল।', 
                         icon: 'error', 
                         confirmButtonColor: '#e63946' 
                     });
                     tg.HapticFeedback.notificationOccurred('error');
                 }
                 
-                // ফুল ক্লিনিং
+                // ফুল ডেটা রিসেট
                 localStorage.removeItem('start_time');
                 localStorage.removeItem('active_vid');
                 localStorage.removeItem('active_step');
             }
         }
 
-        // ইভেন্ট লিসেনার যা ফিরে আসা শনাক্ত করবে
+        // ফিরে আসা শনাক্ত করার ইভেন্টস
         window.addEventListener('focus', verifyLogic);
         document.addEventListener("visibilitychange", function() {
             if (document.visibilityState === 'visible') verifyLogic();
         });
 
-        // পোলিং সিস্টেম (ইন-অ্যাপ ব্রাউজারের জন্য)
+        // পোলিং সিস্টেম (ইন-অ্যাপ ব্রাউজার ক্রস করলে সাথে সাথে রেজাল্ট দিতে)
         setInterval(() => {
             if (localStorage.getItem('ad_active') === 'true' && document.hasFocus()) {
                 const checkTime = parseInt(localStorage.getItem('start_time'));
-                // ৪.৫ সেকেন্ডের আগে অটো-ভেরিফাই চেক করবে না
-                if (Date.now() - checkTime > 4500) { 
+                if (Date.now() - checkTime > 4000) { 
                     verifyLogic();
                 }
             }
