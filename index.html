@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point Season 5 - Ultimate Final Fix</title>
+    <title>Bachelor Point Season 5 - Ultimate Final Master</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -19,102 +19,187 @@
         }
         
         body { 
-            background: var(--bg); color: #222; 
+            background: var(--bg); 
+            color: #222; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; padding: 0; user-select: none; -webkit-user-select: none;
+            margin: 0; 
+            padding: 0; 
+            user-select: none; 
+            -webkit-user-select: none;
             overflow-x: hidden;
         }
         
-        /* ভিডিও টাইটেল টেক্সট সিলেকশন পারমিশন */
-        .video-title { user-select: text !important; -webkit-user-select: text !important; cursor: text; font-weight: bold; }
+        .video-title { 
+            user-select: text !important; 
+            -webkit-user-select: text !important; 
+            cursor: text; 
+            font-weight: bold; 
+        }
         
-        /* প্রিমিয়াম হেডার সেকশন */
         .header-section { 
             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            padding: 50px 20px 80px; text-align: center; color: white; 
-            border-radius: 0 0 50px 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            padding: 55px 20px 85px; 
+            text-align: center; 
+            color: white; 
+            border-radius: 0 0 55px 55px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
         }
-        .header-section h1 { margin: 0; font-size: 26px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+        .header-section h1 { 
+            margin: 0; 
+            font-size: 26px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            font-weight: 900; 
+        }
 
-        /* স্টিকি ক্যাটাগরি বার */
         .category-bar { 
-            display: flex; justify-content: center; padding: 15px; background: var(--white); 
-            margin: -40px 20px 20px; border-radius: 25px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); 
-            position: sticky; top: 10px; z-index: 1000; overflow-x: auto; gap: 12px; 
+            display: flex; 
+            justify-content: center; 
+            padding: 15px; 
+            background: var(--white); 
+            margin: -40px 20px 25px; 
+            border-radius: 25px; 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1); 
+            position: sticky; 
+            top: 10px; 
+            z-index: 1000; 
+            overflow-x: auto; 
+            gap: 12px; 
         }
         .cat-btn { 
-            padding: 12px 25px; border-radius: 18px; border: 2px solid var(--primary); 
-            background: transparent; color: var(--primary); font-weight: bold; 
-            cursor: pointer; font-size: 14px; white-space: nowrap; transition: 0.3s; 
+            padding: 12px 25px; 
+            border-radius: 18px; 
+            border: 2px solid var(--primary); 
+            background: transparent; 
+            color: var(--primary); 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 14px; 
+            white-space: nowrap; 
+            transition: all 0.3s ease; 
         }
         .cat-btn.active { 
             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            color: white; border: none; box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4);
+            color: white; 
+            border: none; 
+            box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4);
         }
         
-        /* সার্চ বক্স ডিজাইন */
         .search-container { padding: 0 25px 20px; }
         .search-box { 
-            width: 100%; padding: 18px; border-radius: 20px; border: 2px solid #ddd; 
-            font-size: 16px; outline: none; box-sizing: border-box; background: white; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s;
+            width: 100%; 
+            padding: 18px; 
+            border-radius: 20px; 
+            border: 2px solid #ddd; 
+            font-size: 16px; 
+            outline: none; 
+            box-sizing: border-box; 
+            background: white; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-        .search-box:focus { border-color: var(--primary); }
 
-        /* ভিডিও কার্ড গ্রিড */
         .main-content { 
-            padding: 10px 25px 40px; display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; 
+            padding: 10px 25px 40px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); 
+            gap: 25px; 
         }
+        
         .card { 
-            background: var(--white); border-radius: 30px; overflow: hidden; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-align: center; 
-            padding-bottom: 25px; border: 1px solid #f0f0f0; transition: transform 0.3s;
+            background: var(--white); 
+            border-radius: 35px; 
+            overflow: hidden; 
+            box-shadow: 0 12px 28px rgba(0,0,0,0.08); 
+            text-align: center; 
+            padding-bottom: 25px; 
+            border: 1px solid #f0f0f0; 
+            transition: transform 0.3s ease;
         }
         .card:hover { transform: translateY(-5px); }
-        .thumb-box { width: 100%; height: 190px; overflow: hidden; background: #eee; }
+        
+        .thumb-box { 
+            width: 100%; 
+            height: 200px; 
+            overflow: hidden; 
+            background: #eee;
+        }
         .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        .card-details { padding: 20px; }
-        .video-title { margin: 0 0 15px; font-size: 18px; color: #333; height: 50px; overflow: hidden; display: flex; align-items: center; justify-content: center; line-height: 1.4; }
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 14px; font-weight: 800; color: #555; }
+        .card-details { padding: 22px; }
+        .video-title { 
+            margin: 0 0 15px; 
+            font-size: 19px; 
+            color: #333; 
+            height: 55px; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            line-height: 1.4; 
+        }
+        .info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 20px; 
+            font-size: 14px; 
+            font-weight: 800; 
+            color: #555; 
+        }
         
-        /* বাটন স্টাইল */
         .unlock-btn { 
             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            color: white; border: none; padding: 16px; width: 90%; 
-            border-radius: 18px; font-weight: bold; cursor: pointer; font-size: 16px; 
-            box-shadow: 0 8px 20px rgba(230, 57, 70, 0.3); transition: 0.3s;
+            color: white; 
+            border: none; 
+            padding: 16px; 
+            width: 90%; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 16px; 
+            box-shadow: 0 8px 20px rgba(230, 57, 70, 0.3);
         }
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; box-shadow: 0 8px 20px rgba(0, 200, 83, 0.3) !important; }
-        .locked-btn { background: #666 !important; cursor: not-allowed; box-shadow: none !important; }
+        /* লক করা বাটনের জন্য কার্সর পয়েন্টার রাখা হয়েছে যাতে ক্লিক করে নোটিশ দেখা যায় */
+        .locked-btn { background: #555 !important; cursor: pointer !important; box-shadow: none !important; }
 
-        /* ভেরিফিকেশন পপ-আপ ডিজাইন */
         #verify-overlay { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; 
-            justify-content: center; align-items: center; text-align: center; 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); 
+            z-index: 10000; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center; 
         }
         .verify-box { 
-            background: white; padding: 50px 30px; border-radius: 40px; 
-            width: 85%; max-width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+            background: white; 
+            padding: 55px 35px; 
+            border-radius: 40px; 
+            width: 85%; 
+            max-width: 350px; 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5); 
         }
         .loader-ring { 
-            width: 70px; height: 70px; border: 7px solid #f3f3f3; 
-            border-top: 7px solid var(--primary); border-radius: 50%; 
-            animation: spin 1s linear infinite; margin: 0 auto 30px; 
+            width: 75px; height: 75px; 
+            border: 8px solid #f3f3f3; 
+            border-top: 8px solid var(--primary); 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+            margin: 0 auto 35px; 
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body onclick="manualCheck()">
+<body onfocus="checkVerify()" onclick="checkVerify()">
 
     <div id="verify-overlay">
         <div class="verify-box">
             <div class="loader-ring"></div>
-            <h2 style="color: var(--primary); margin: 0 0 15px; font-weight: 900;">বিজ্ঞাপন যাচাই...</h2>
-            <p id="timer-text" style="font-size: 15px; color: #555; line-height: 1.6;">
-                বটের ভেতর ১০ সেকেন্ড টাইমার শুরু হয়েছে। অ্যাড দেখে ফিরে এসে স্ক্রিনে টাচ করুন।
+            <h2 style="color: var(--primary); font-weight: 900; margin-bottom: 15px;">বিজ্ঞাপন যাচাই...</h2>
+            <p style="font-size: 15px; color: #555; line-height: 1.6;">
+                বটের ভেতরে টাইমার চলছে। ১০ সেকেন্ড পূর্ণ হলে ব্রাউজার ক্লোজ করুন এবং এই স্ক্রিনে একবার টাচ করুন।
             </p>
         </div>
     </div>
@@ -174,13 +259,7 @@
                 }
 
                 const lastTime = localStorage.getItem('time_' + v.id);
-                const currentTime = Date.now();
-                let isLocked = lastTime && (currentTime - lastTime < LOCK_TIME);
-                
-                if (lastTime && (currentTime - lastTime >= LOCK_TIME)) {
-                    localStorage.removeItem('time_' + v.id); localStorage.removeItem('step_' + v.id); isLocked = false;
-                }
-
+                const isLocked = lastTime && (Date.now() - lastTime < LOCK_TIME);
                 let step = parseInt(localStorage.getItem('step_' + v.id)) || 0;
                 const total = v.ads ? v.ads.length : 0;
                 
@@ -210,7 +289,15 @@
 
         function handleAction(v_id, ads) {
             const lastTime = localStorage.getItem('time_' + v_id);
-            if (lastTime && (Date.now() - lastTime < LOCK_TIME)) return;
+            if (lastTime && (Date.now() - lastTime < LOCK_TIME)) {
+                Swal.fire({
+                    title: 'ইতিমধ্যে নিয়েছেন!',
+                    text: 'এই ভিডিওটি আপনি গত ২৪ ঘণ্টার মধ্যে একবার নিয়েছেন। আপনার ইনবক্স চেক করুন।',
+                    icon: 'warning',
+                    confirmButtonColor: '#e63946'
+                });
+                return;
+            }
 
             let step = parseInt(localStorage.getItem('step_' + v_id)) || 0;
             if (step >= ads.length) {
@@ -219,7 +306,6 @@
                 return;
             }
 
-            // ব্যাকগ্রাউন্ড টাইমার লজিক ফিক্স
             localStorage.setItem('ad_active', 'true');
             localStorage.setItem('target_time', Date.now() + (REQUIRED_SEC * 1000));
             localStorage.setItem('active_vid', v_id);
@@ -229,7 +315,7 @@
             document.getElementById('verify-overlay').style.display = 'flex';
         }
 
-        function verifyNow() {
+        function checkVerify() {
             if (localStorage.getItem('ad_active') === 'true') {
                 const targetTime = parseInt(localStorage.getItem('target_time'));
                 const now = Date.now();
@@ -238,6 +324,7 @@
                     const vid = localStorage.getItem('active_vid');
                     const step = parseInt(localStorage.getItem('active_step'));
                     localStorage.setItem('step_' + vid, step + 1);
+                    
                     document.getElementById('verify-overlay').style.display = 'none';
                     localStorage.removeItem('ad_active');
                     renderUI();
@@ -246,14 +333,16 @@
                     const remaining = Math.ceil((targetTime - now) / 1000);
                     document.getElementById('verify-overlay').style.display = 'none';
                     localStorage.removeItem('ad_active');
-                    Swal.fire({ title: 'ব্যর্থ!', text: `আপনি সময়ের আগে ফিরে এসেছেন। আরও ${remaining} সেকেন্ড বাকি ছিল।`, icon: 'error', confirmButtonColor: '#e63946' });
+                    
+                    Swal.fire({ 
+                        title: 'ব্যর্থ!', 
+                        text: `আপনি সময়ের আগেই ফিরে এসেছেন। আরও অন্তত ${remaining} সেকেন্ড অ্যাডে থাকা প্রয়োজন ছিল।`, 
+                        icon: 'error', 
+                        confirmButtonColor: '#e63946' 
+                    });
                 }
             }
         }
-
-        function manualCheck() { if (localStorage.getItem('ad_active') === 'true') verifyNow(); }
-        window.onfocus = verifyNow;
-        document.addEventListener("visibilitychange", function() { if (document.visibilityState === 'visible') verifyNow(); });
     </script>
 </body>
 </html>
