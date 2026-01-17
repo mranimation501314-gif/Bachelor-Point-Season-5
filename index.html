@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point Season 5 - Ultimate Fix</title>
+    <title>Bachelor Point Season 5 - Ultimate Final Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -17,7 +17,6 @@
             margin: 0; padding: 0; user-select: none; -webkit-user-select: none;
         }
         
-        /* টাইটেল কপি করার অনুমতি */
         .video-title { user-select: text !important; -webkit-user-select: text !important; cursor: text; font-weight: bold; }
         
         .header-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 45px 20px 75px; text-align: center; color: white; border-radius: 0 0 45px 45px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
@@ -42,7 +41,6 @@
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
         .locked-btn { background: #555 !important; cursor: not-allowed; }
 
-        /* পপ-আপ ওভারলে */
         #verify-overlay { 
             display: none; 
             position: fixed; 
@@ -66,7 +64,7 @@
         <div class="verify-box">
             <div class="loader-ring"></div>
             <h2 style="color: #e63946; margin: 0 0 12px;">অ্যাড যাচাই হচ্ছে...</h2>
-            <p style="font-size: 14px; color: #666; line-height: 1.5;">অ্যাড পেজে ১০ সেকেন্ড অবস্থান করুন। ফিরে আসার সাথে সাথে রেজাল্ট পাবেন।</p>
+            <p style="font-size: 14px; color: #666; line-height: 1.5;">অ্যাড পেজে ১০ সেকেন্ড অবস্থান করুন। ব্রাউজার ক্রস করলে অটোমেটিক চেক হবে।</p>
         </div>
     </div>
 
@@ -84,7 +82,6 @@
     <div class="main-content" id="video-display">লোডিং হচ্ছে...</div>
 
     <script>
-        // Firebase Configuration
         const firebaseConfig = { databaseURL: "https://bachelor-point-season-5-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -98,7 +95,6 @@
         let allVideos = {};
         let currentCategory = "All";
 
-        // Fetch Data from Firebase
         db.ref('videos').on('value', (snap) => {
             allVideos = snap.val() || {};
             renderUI();
@@ -130,7 +126,6 @@
                 const currentTime = Date.now();
                 let isLocked = lastTime && (currentTime - lastTime < LOCK_TIME);
                 
-                // ২৪ ঘণ্টা পার হলে অটো রিসেট
                 if (lastTime && (currentTime - lastTime >= LOCK_TIME)) {
                     localStorage.removeItem('time_' + v.id);
                     localStorage.removeItem('step_' + v.id);
@@ -182,28 +177,37 @@
             const total = ads ? ads.length : 0;
 
             if (step >= total) {
-                localStorage.setItem('time_' + v_id, Date.now());
-                window.location.href = `https://t.me/${BOT_USERNAME}?start=${v_id}`;
+                // ডাউনলোড বাটনের অ্যালার্ট ফিক্স
+                Swal.fire({
+                    title: 'ইনবক্স চেক করুন!',
+                    text: 'ডাউনলোড লিঙ্কটি টেলিগ্রাম বটের ইনবক্সে পাঠানো হয়েছে।',
+                    icon: 'success',
+                    confirmButtonText: 'ঠিক আছে'
+                }).then(() => {
+                    localStorage.setItem('time_' + v_id, Date.now());
+                    window.location.href = `https://t.me/${BOT_USERNAME}?start=${v_id}`;
+                });
                 return;
             }
 
-            // ট্র্যাকিং শুরু
-            localStorage.setItem('ad_active', 'true');
-            localStorage.setItem('start_time', Date.now());
-            localStorage.setItem('active_vid', v_id);
-            localStorage.setItem('active_step', step);
-
+            // লিঙ্ক ওপেন হওয়ার পরে ট্র্যাকিং শুরু করার ফিক্স
             document.getElementById('verify-overlay').style.display = 'flex';
-            tg.openLink(ads[step]);
+            
+            // লিঙ্কটি ওপেন হওয়ার জন্য একটু সময় দেওয়া
+            setTimeout(() => {
+                localStorage.setItem('ad_active', 'true');
+                localStorage.setItem('start_time', Date.now());
+                localStorage.setItem('active_vid', v_id);
+                localStorage.setItem('active_step', step);
+                tg.openLink(ads[step]);
+            }, 800); 
         }
 
-        // মূল ফিক্স: ইন-অ্যাপ ব্রাউজার বন্ধ হওয়া মাত্রই চেক করার লজিক
         function verifyLogic() {
             if (localStorage.getItem('ad_active') === 'true') {
                 const startTime = parseInt(localStorage.getItem('start_time'));
                 const timeDiff = Math.floor((Date.now() - startTime) / 1000);
 
-                // সাথে সাথে ওভারলে বন্ধ করা
                 document.getElementById('verify-overlay').style.display = 'none';
                 localStorage.removeItem('ad_active');
 
@@ -227,18 +231,18 @@
             }
         }
 
-        // টেলিগ্রাম ব্রাউজারের "X" বাটনে ক্লিক করলে ফিরে আসা শনাক্ত করবে
+        // ইন-অ্যাপ ব্রাউজার ক্রস করলে বা ফিরে আসলে ট্রিগার
         window.onfocus = verifyLogic;
         document.addEventListener("visibilitychange", function() {
             if (document.visibilityState === 'visible') verifyLogic();
         });
 
-        // ব্যাকআপ পোলিং চেক (ইন-অ্যাপ ব্রাউজারের জন্য)
+        // ব্যাকআপ পোলিং
         setInterval(() => {
             if (localStorage.getItem('ad_active') === 'true' && document.hasFocus()) {
                 verifyLogic();
             }
-        }, 800);
+        }, 1000);
 
     </script>
 </body>
