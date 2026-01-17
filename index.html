@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point S5 - Episode Search Panel</title>
+    <title>Bachelor Point S5 - Pro Panel</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -21,7 +21,7 @@
         
         .search-container { padding: 0 20px 15px; }
         .search-box { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #ddd; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; }
-        .search-box:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(230, 57, 70, 0.2); }
+        .search-box:focus { border-color: var(--primary); }
 
         .main-content { padding: 10px 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { background: var(--white); border-radius: 25px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; padding-bottom: 20px; }
@@ -30,7 +30,6 @@
         
         .card-details { padding: 15px; }
         .unlock-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 14px; width: 90%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .unlock-btn:active { transform: scale(0.95); }
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
 
         #timer-overlay { 
@@ -75,6 +74,9 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // আপনার সঠিক বটের ইউজারনেম এখানে দেওয়া হয়েছে
+        const BOT_USERNAME = "Bachelor_Point_Season_5_ep_bot"; 
+
         let allVideos = {};
         let currentCategory = "All";
         let timerInterval = null;
@@ -96,7 +98,6 @@
             renderUI();
         }
 
-        // --- স্মার্ট এপিসোড সার্চ লজিক ---
         function renderUI() {
             const container = document.getElementById('video-display');
             const searchInput = document.getElementById('videoSearch').value.trim();
@@ -104,17 +105,11 @@
             
             for (let id in allVideos) {
                 const v = { ...allVideos[id], id: id };
-                
-                // ১. ক্যাটাগরি চেক
                 if (currentCategory !== "All" && v.category !== currentCategory) continue;
 
-                // ২. সার্চ ফিল্টারিং (এপিসোড নাম্বার লজিক)
                 if (searchInput !== "") {
-                    // টাইটেল থেকে 'Episode' বা 'Ep' এর পরের নাম্বারটি খুঁজে বের করা
                     const regex = /(?:episode|ep|এপিসোড)\s*(\d+)/i;
                     const match = v.name.match(regex);
-                    
-                    // যদি টাইটেলে এপিসোড নাম্বার না মিলে অথবা ইউজারের নাম্বারের সাথে না মিলে, তবে স্কিপ করবে
                     if (!match || match[1] !== searchInput) continue;
                 }
 
@@ -129,7 +124,6 @@
                         <div class="card-details">
                             <h3>${v.name}</h3>
                             <button class="${btnClass}" onclick='handleAd("${v.id}", ${JSON.stringify(v.ads)})'>${btnTxt}</button>
-                            <p style="margin-top:10px; font-size:12px; color:#666;">ধাপ: ${step}/${total} | ${v.category}</p>
                         </div>
                     </div>`;
             }
@@ -137,8 +131,11 @@
 
         function handleAd(v_id, ads) {
             let step = getCurrentStep(v_id);
+            
+            // সব অ্যাড দেখা শেষ হলে বটের ইনবক্সে পাঠাবে
             if (step >= (ads ? ads.length : 0)) {
-                window.location.href = `https://t.me/bachelor_point_s5_bot?start=${v_id}`;
+                // এখানে ইউজারনেম এবং স্টার্ট প্যারামিটার ব্যবহার করা হয়েছে
+                window.location.href = `https://t.me/${BOT_USERNAME}?start=${v_id}`;
                 return;
             }
 
