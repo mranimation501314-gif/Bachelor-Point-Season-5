@@ -21,7 +21,6 @@
             -webkit-tap-highlight-color: transparent; 
         }
         
-        /* টাইটেল কপি করার অনুমতি */
         .video-title { 
             user-select: text !important; 
             -webkit-user-select: text !important; 
@@ -36,7 +35,7 @@
         .cat-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; }
         
         .search-container { padding: 0 20px 15px; }
-        .search-box { width: 100%; padding: 15px; border-radius: 18px; border: 2px solid #ddd; font-size: 16px; outline: none; box-sizing: border-box; background: white; transition: 0.3s; }
+        .search-box { width: 100%; padding: 15px; border-radius: 18px; border: 2px solid #ddd; font-size: 16px; outline: none; box-sizing: border-box; background: white; }
 
         .main-content { padding: 10px 20px 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .card { background: var(--white); border-radius: 25px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align: center; padding-bottom: 20px; border: 1px solid #f0f0f0; }
@@ -51,7 +50,6 @@
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
         .locked-btn { background: linear-gradient(135deg, #555, #222) !important; cursor: not-allowed; }
 
-        /* ইউটিউব ভেরিফিকেশন পপ-আপ */
         #verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
         .verify-box { background: white; color: #333; padding: 45px 25px; border-radius: 35px; width: 85%; max-width: 320px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); cursor: pointer; }
         .loader-ring { width: 60px; height: 60px; border: 6px solid #f3f3f3; border-top: 6px solid #e63946; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 25px; }
@@ -64,7 +62,7 @@
         <div class="verify-box">
             <div class="loader-ring"></div>
             <h2 style="color: #e63946; margin: 0 0 12px;">বিজ্ঞাপন যাচাই...</h2>
-            <p id="verify-msg" style="font-size: 14px; color: #666; line-height: 1.5;">ইউটিউব বা ব্রাউজার থেকে ফিরে আসলে এখানে টাচ করুন। ১০ সেকেন্ড না হলে সফল হবে না।</p>
+            <p style="font-size: 14px; color: #666;">ইউটিউব বা ব্রাউজার থেকে ফিরে আসলে এখানে টাচ করুন।</p>
         </div>
     </div>
 
@@ -122,7 +120,7 @@
                 const currentTime = Date.now();
                 let isLocked = lastTime && (currentTime - lastTime < LOCK_TIME);
                 
-                // ২৪ ঘণ্টা পার হলে অটো রিসেট
+                // ২৪ ঘণ্টা পার হলে লক অটোমেটিক খুলে যাবে
                 if (lastTime && (currentTime - lastTime >= LOCK_TIME)) {
                     localStorage.removeItem('time_' + v.id);
                     localStorage.removeItem('step_' + v.id);
@@ -137,7 +135,7 @@
                 if (isLocked) {
                     btnTxt = "🚫 ইনবক্স চেক করুন";
                     btnClass = "unlock-btn locked-btn";
-                    stepTxt = `ধাপ: 0/${total} 🚀`;
+                    stepTxt = `ধাপ: 0/${total} 🚀`; // লক থাকলে ধাপ ০ দেখাবে
                 } else if (step >= total) {
                     btnTxt = "📥 GET DOWNLOAD VIDEO";
                     btnClass = "unlock-btn download-btn";
@@ -168,7 +166,7 @@
             if (lastTime && (Date.now() - lastTime < LOCK_TIME)) {
                 Swal.fire({
                     title: 'ইতিমধ্যে নিয়েছেন!',
-                    text: 'আপনি ২৪ ঘণ্টার মধ্যে ভিডিওটি নিয়েছেন। ইনবক্স চেক করুন।',
+                    text: 'আপনি এই ভিডিওটি ইতিমধ্যে ডাউনলোড করেছেন। ২৪ ঘণ্টা পর আবার ট্রাই করুন।',
                     icon: 'warning',
                     confirmButtonColor: '#e63946'
                 });
@@ -179,14 +177,12 @@
             const total = ads ? ads.length : 0;
 
             if (step >= total) {
-                // ভিডিও ডেলিভারি শুরু এবং ২৪ ঘণ্টা লক সক্রিয়
+                // ডাউনলোড বাটনে ক্লিক করলে সময় সেভ হবে এবং লক হয়ে যাবে
                 localStorage.setItem('time_' + v_id, Date.now());
                 window.location.href = `https://t.me/${BOT_USERNAME}?start=${v_id}`;
-                setTimeout(() => renderUI(), 1000);
                 return;
             }
 
-            // ইউটিউব বা অ্যাপ লিঙ্কের জন্য টাইম ট্র্যাকিং
             localStorage.setItem('ad_active', 'true');
             localStorage.setItem('start_time', Date.now());
             localStorage.setItem('active_vid', v_id);
@@ -201,7 +197,6 @@
                 const startTime = parseInt(localStorage.getItem('start_time'));
                 const timeDiff = Math.floor((Date.now() - startTime) / 1000);
 
-                // ফিরে আসার পর ১.৫ সেকেন্ড ডিলে দিয়ে ভেরিফাই করা
                 setTimeout(() => {
                     if (timeDiff >= REQUIRED_SEC) {
                         const vid = localStorage.getItem('active_vid');
@@ -214,14 +209,13 @@
                     } else {
                         localStorage.removeItem('ad_active');
                         document.getElementById('verify-overlay').style.display = 'none';
-                        Swal.fire('ব্যর্থ!', 'আপনি ১০ সেকেন্ড পূর্ণ হওয়ার আগেই ফিরে এসেছেন।', 'error');
+                        Swal.fire('ব্যর্থ!', '১০ সেকেন্ড পূর্ণ হয়নি।', 'error');
                     }
                     localStorage.removeItem('start_time');
                 }, 1000);
             }
         }
 
-        // অ্যাপ ফোকাস হলে বা উইন্ডো লোড হলে অটোমেটিক ভেরিফাই
         window.addEventListener('focus', verifyReturn);
         window.onload = verifyReturn;
     </script>
