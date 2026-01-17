@@ -192,17 +192,23 @@
                 return;
             }
 
-            // ট্র্যাকিং ডেটা সেটআপ
+            // প্রতিবার ক্লিক করার সময় আগের সব ট্র্যাকিং ডেটা মুছে ফেলা
+            localStorage.removeItem('ad_active');
+            localStorage.removeItem('start_time');
+            localStorage.removeItem('active_vid');
+            localStorage.removeItem('active_step');
+
+            // নতুন সেশন শুরু করা
             document.getElementById('verify-overlay').style.display = 'flex';
             
             setTimeout(() => {
-                const startTime = Date.now();
+                const now = Date.now();
                 localStorage.setItem('ad_active', 'true');
-                localStorage.setItem('start_time', startTime.toString());
+                localStorage.setItem('start_time', now.toString());
                 localStorage.setItem('active_vid', v_id);
                 localStorage.setItem('active_step', step.toString());
                 tg.openLink(ads[step]);
-            }, 600);
+            }, 800); 
         }
 
         function verifyLogic() {
@@ -210,15 +216,15 @@
                 const storedStartTime = parseInt(localStorage.getItem('start_time'));
                 const currentTime = Date.now();
                 
-                // ৩ সেকেন্ডের সেফটি ডিলে (লিঙ্ক ওপেন হওয়ার জন্য সময় দেওয়া)
+                // ৩ সেকেন্ডের সেফটি ডিলে (লিঙ্ক লোড হওয়ার সময় দেওয়া)
                 if (currentTime - storedStartTime < 3000) return;
 
-                // আসল সময় পার্থক্য বের করা
                 const timeDiffMs = currentTime - storedStartTime;
                 const timeDiffSec = Math.floor(timeDiffMs / 1000);
 
-                document.getElementById('verify-overlay').style.display = 'none';
+                // গুরুত্বপূর্ণ: সাথে সাথে স্ট্যাটাস ক্লিয়ার করা যাতে একই ডেটা বারবার না আসে
                 localStorage.removeItem('ad_active');
+                document.getElementById('verify-overlay').style.display = 'none';
 
                 if (timeDiffSec >= REQUIRED_SEC) {
                     const vid = localStorage.getItem('active_vid');
@@ -238,23 +244,23 @@
                     tg.HapticFeedback.notificationOccurred('error');
                 }
                 
+                // ডেটা ক্লিনআপ
                 localStorage.removeItem('start_time');
                 localStorage.removeItem('active_vid');
                 localStorage.removeItem('active_step');
             }
         }
 
-        // টেলিগ্রাম ইন-অ্যাপ ব্রাউজার ফিরে আসা শনাক্ত করা
         window.addEventListener('focus', verifyLogic);
         document.addEventListener("visibilitychange", function() {
             if (!document.hidden) verifyLogic();
         });
 
-        // শক্তিশালী পোলিং (টেলিক্রাম ইন-অ্যাপ ব্রাউজারের ওভারলে কাটার সাথে সাথে চেক করবে)
+        // পোলিং চেক (৫০০ মিলিসেকেন্ড অন্তর)
         setInterval(() => {
             if (localStorage.getItem('ad_active') === 'true' && document.hasFocus()) {
                 const checkStartTime = parseInt(localStorage.getItem('start_time'));
-                if (Date.now() - checkStartTime > 2500) { 
+                if (Date.now() - checkStartTime > 3500) { 
                     verifyLogic();
                 }
             }
