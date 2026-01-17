@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point Season 5 - Ultimate Fix</title>
+    <title>Bachelor Point Season 5 - Ultimate High-Level Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -42,7 +42,7 @@
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
         .locked-btn { background: #555 !important; cursor: not-allowed; }
 
-        /* আল্ট্রা স্লিম টাইমার প্যানেল */
+        /* স্লিম টাইমার প্যানেল */
         #verify-overlay { 
             display: none; 
             position: fixed; 
@@ -51,23 +51,25 @@
             width: 100%; 
             background: #ffffff; 
             z-index: 10000; 
-            padding: 8px 15px;
+            padding: 10px 15px;
             box-shadow: 0 -2px 15px rgba(0,0,0,0.15);
             border-top: 2px solid var(--primary);
             flex-direction: row;
             align-items: center;
             justify-content: center;
-            height: 55px;
+            height: 60px;
         }
         
         #countdown-display { 
-            font-size: 24px; 
+            font-size: 26px; 
             font-weight: 900; 
             color: #e63946; 
             margin-right: 15px;
             background: #fff0f0;
-            padding: 2px 10px;
-            border-radius: 8px;
+            padding: 2px 12px;
+            border-radius: 10px;
+            min-width: 45px;
+            text-align: center;
         }
     </style>
 </head>
@@ -75,7 +77,7 @@
 
     <div id="verify-overlay">
         <div id="countdown-display">১০</div>
-        <div style="font-size: 14px; color: #333; font-weight: bold;">বিজ্ঞাপন যাচাই হচ্ছে... <span style="font-weight: normal; color: #666;">পেজে অবস্থান করুন</span></div>
+        <div style="font-size: 14px; color: #333; font-weight: bold;">বিজ্ঞাপন যাচাই হচ্ছে... <span style="font-weight: normal; color: #666;"><br>অ্যাড পেজে অবস্থান করুন</span></div>
     </div>
 
     <div class="header-section"><h1>Bachelor Point Season 5</h1></div>
@@ -104,7 +106,7 @@
 
         let allVideos = {};
         let currentCategory = "All";
-        let countdownInterval;
+        let liveTimer = null;
 
         db.ref('videos').on('value', (snap) => {
             allVideos = snap.val() || {};
@@ -180,7 +182,7 @@
                 return;
             }
 
-            // সেশন রিসেট এবং টাইমার শুরু
+            // একদম নতুন সেশন শুরু করার জন্য আগের সব ডিলিট
             localStorage.removeItem('ad_active');
             localStorage.removeItem('start_time');
             
@@ -194,13 +196,13 @@
                 localStorage.setItem('active_vid', v_id);
                 localStorage.setItem('active_step', step.toString());
                 tg.openLink(ads[step]);
-                runLiveTimer();
-            }, 500);
+                startCounting();
+            }, 600);
         }
 
-        function runLiveTimer() {
-            clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
+        function startCounting() {
+            clearInterval(liveTimer);
+            liveTimer = setInterval(() => {
                 if (localStorage.getItem('ad_active') === 'true') {
                     const start = parseInt(localStorage.getItem('start_time'));
                     const diff = Math.floor((Date.now() - start) / 1000);
@@ -210,19 +212,21 @@
             }, 1000);
         }
 
-        function verifyLogic() {
+        function processResult() {
             if (localStorage.getItem('ad_active') === 'true') {
-                const startTime = parseInt(localStorage.getItem('start_time'));
-                const currentTime = Date.now();
-                const timeDiff = Math.floor((currentTime - startTime) / 1000);
+                const start = parseInt(localStorage.getItem('start_time'));
+                const now = Date.now();
+                const diffSec = Math.floor((now - start) / 1000);
 
-                if (currentTime - startTime < 3000) return; // লিঙ্ক লোড হওয়ার সময় দেওয়া
+                // ক্লিক করার ৪ সেকেন্ডের মধ্যে ফিরে আসলে (অ্যাড ওপেন হওয়ার সময়) ইগনোর
+                if (now - start < 4000) return;
 
-                document.getElementById('verify-overlay').style.display = 'none';
+                // সাথে সাথে সেশন বন্ধ যাতে ডেটা না আটকে থাকে
                 localStorage.removeItem('ad_active');
-                clearInterval(countdownInterval);
+                clearInterval(liveTimer);
+                document.getElementById('verify-overlay').style.display = 'none';
 
-                if (timeDiff >= REQUIRED_SEC) {
+                if (diffSec >= REQUIRED_SEC) {
                     const vid = localStorage.getItem('active_vid');
                     const step = parseInt(localStorage.getItem('active_step'));
                     localStorage.setItem('step_' + vid, (step + 1).toString());
@@ -230,10 +234,11 @@
                     Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে।', icon: 'success' });
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
-                    const rem = REQUIRED_SEC - timeDiff;
+                    const rem = REQUIRED_SEC - diffSec;
+                    // ইউজারের প্রচেষ্টার সেকেন্ড নির্ভুলভাবে দেখানো
                     Swal.fire({ 
                         title: 'ব্যর্থ!', 
-                        text: 'আপনি মাত্র ' + timeDiff + ' সেকেন্ড ছিলেন। আরও ' + rem + ' সেকেন্ড বাকি ছিল।', 
+                        text: 'আপনি এইবার মাত্র ' + diffSec + ' সেকেন্ড ছিলেন। আরও ' + rem + ' সেকেন্ড বাকি ছিল।', 
                         icon: 'error' 
                     });
                     tg.HapticFeedback.notificationOccurred('error');
@@ -242,16 +247,17 @@
             }
         }
 
-        window.onfocus = verifyLogic;
+        // সবথেকে শক্তিশালী শনাক্তকরণ পদ্ধতি
+        window.onfocus = processResult;
         document.addEventListener("visibilitychange", function() {
-            if (document.visibilityState === 'visible') verifyLogic();
+            if (document.visibilityState === 'visible') processResult();
         });
 
-        // ব্যাকআপ চেক
+        // পোলিং সিস্টেম (ইন-অ্যাপ ব্রাউজারের জন্য দ্রুততম চেক)
         setInterval(() => {
             if (localStorage.getItem('ad_active') === 'true' && document.hasFocus()) {
                 const checkTime = parseInt(localStorage.getItem('start_time'));
-                if (Date.now() - checkTime > 4000) verifyLogic();
+                if (Date.now() - checkTime > 4500) processResult();
             }
         }, 500);
 
