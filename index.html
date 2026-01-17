@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point Season 5 - Ultimate High-Level Fix</title>
+    <title>Bachelor Point Season 5 - High Speed Telegram Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -17,8 +17,6 @@
             margin: 0; padding: 0; user-select: none; -webkit-user-select: none;
             padding-bottom: 80px;
         }
-        
-        .video-title { user-select: text !important; -webkit-user-select: text !important; cursor: text; font-weight: bold; }
         
         .header-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 45px 20px 75px; text-align: center; color: white; border-radius: 0 0 45px 45px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .header-section h1 { margin: 0; font-size: 24px; text-transform: uppercase; font-weight: 900; }
@@ -42,6 +40,7 @@
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
         .locked-btn { background: #555 !important; cursor: not-allowed; }
 
+        /* স্লিম ডাইনামিক টাইমার প্যানেল */
         #verify-overlay { 
             display: none; 
             position: fixed; 
@@ -63,7 +62,7 @@
 
     <div id="verify-overlay">
         <div id="countdown-display">১০</div>
-        <div style="font-size: 14px; color: #333; font-weight: bold;">অ্যাড লোড হচ্ছে... <br><span style="font-weight: normal; color: #666; font-size: 11px;">ফিরে আসা মাত্র রেজাল্ট পাবেন।</span></div>
+        <div style="font-size: 14px; color: #333; font-weight: bold;">অ্যাড লোড হচ্ছে... <br><span style="font-weight: normal; color: #666; font-size: 11px;">ফিরে আসা মাত্র ফলাফল লোডিং হবে।</span></div>
     </div>
 
     <div class="header-section"><h1>Bachelor Point Season 5</h1></div>
@@ -74,7 +73,7 @@
     </div>
 
     <div class="search-container">
-        <input type="text" id="videoSearch" class="search-box" placeholder="এপিসোড নাম্বার লিখুন..." oninput="renderUI()">
+        <input type="text" id="videoSearch" class="search-box" placeholder="এপিসোড নাম্বার লিখে সার্চ করুন..." oninput="renderUI()">
     </div>
 
     <div class="main-content" id="video-display">লোডিং হচ্ছে...</div>
@@ -105,22 +104,20 @@
             renderUI();
         }
 
-        // সার্চ বক্স ফিক্স: শুধুমাত্র সংখ্যা ম্যাচিং লজিক
+        // সার্চ বক্স ফিক্স: "Episode" লেখা খুঁজবে তারপর নাম্বার
         function renderUI() {
             const container = document.getElementById('video-display');
-            const searchRaw = document.getElementById('videoSearch').value.trim();
-            const searchNum = searchRaw.replace(/\D/g, ""); // সব টেক্সট বাদ দিয়ে শুধু সংখ্যা রাখা
-            
+            const searchInput = document.getElementById('videoSearch').value.trim();
             container.innerHTML = "";
             
             for (let id in allVideos) {
                 const v = { ...allVideos[id], id: id };
                 if (currentCategory !== "All" && v.category !== currentCategory) continue;
 
-                // যদি সার্চ বক্সে কিছু লেখা হয়, তবে ভিডিওর নামের ভেতরের সংখ্যার সাথে চেক করবে
-                if (searchNum !== "") {
-                    const videoNum = v.name.replace(/\D/g, "");
-                    if (videoNum !== searchNum) continue;
+                if (searchInput !== "") {
+                    // লজিক: ভিডিওর নামে "Episode" থাকতে হবে এবং তারপর সার্চ করা সংখ্যা থাকতে হবে
+                    const regex = new RegExp("Episode\\s*" + searchInput, "i");
+                    if (!regex.test(v.name)) continue;
                 }
 
                 const lastTime = localStorage.getItem('time_' + v.id);
@@ -151,7 +148,7 @@
         function handleAction(v_id, ads) {
             const lastTime = localStorage.getItem('time_' + v_id);
             if (lastTime && (Date.now() - lastTime < LOCK_TIME)) {
-                Swal.fire({ title: 'লক!', text: 'লিঙ্ক ইনবক্সে পাঠানো হয়েছে। ২৪ ঘণ্টা পর আবার ট্রাই করুন।', icon: 'warning' });
+                Swal.fire({ title: 'লক!', text: '২৪ ঘণ্টা পর আবার ট্রাই করুন।', icon: 'warning' });
                 return;
             }
 
@@ -165,6 +162,7 @@
                 return;
             }
 
+            // টেলিগ্রামের জন্য হাই-স্পিড ট্র্যাকিং
             localStorage.setItem('ad_active', 'true');
             localStorage.setItem('start_time', Date.now().toString());
             localStorage.setItem('active_vid', v_id);
@@ -174,15 +172,13 @@
             tg.openLink(ads[step]);
         }
 
-        // ফিরে আসা মাত্র রিলোড এবং নোটিশ লজিক
-        function checkAssistant() {
+        // টেলিগ্রামে ফিরে আসা মাত্র রিলোড এবং নোটিশ লজিক
+        function processInstantResult() {
             if (localStorage.getItem('ad_active') === 'true') {
                 const startTime = parseInt(localStorage.getItem('start_time'));
-                const now = Date.now();
-                const actualDiff = Math.floor((now - startTime) / 1000);
+                const actualDiff = Math.floor((Date.now() - startTime) / 1000);
                 const remaining = REQUIRED_SEC - actualDiff;
 
-                // সেশন পরিষ্কার করা যাতে বার বার নোটিশ না আসে
                 localStorage.removeItem('ad_active');
                 localStorage.removeItem('start_time');
                 document.getElementById('verify-overlay').style.display = 'none';
@@ -194,27 +190,23 @@
                     renderUI();
                     Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে। অভিনন্দন!', icon: 'success' });
                 } else {
-                    // আপনি যেমন চেয়েছেন: কত সেকেন্ড হয়েছে এবং কত সেকেন্ড বাকি ছিল তা জানানো
                     Swal.fire({ 
                         title: 'বিজ্ঞাপন রিপোর্ট', 
-                        text: `আপনি মাত্র ${actualDiff} সেকেন্ড ছিলেন। ১০ সেকেন্ড পূর্ণ হতে আরও ${remaining} সেকেন্ড অপেক্ষা করতে হবে।`, 
-                        icon: 'error'
+                        text: `আপনি মাত্র ${actualDiff} সেকেন্ড ছিলেন। আরও ${remaining > 0 ? remaining : 0} সেকেন্ড দেখা বাকি ছিল।`, 
+                        icon: 'error' 
                     });
                 }
             }
         }
 
-        // অ্যাপে ফিরে আসা মাত্র রিলোড ট্রিগার
+        // টেলিগ্রাম ইন-অ্যাপ ব্রাউজার ফিরে আসা শনাক্ত করা
+        window.onload = processInstantResult;
+        window.onfocus = processInstantResult;
         document.addEventListener("visibilitychange", function() {
             if (document.visibilityState === 'visible') {
-                if (localStorage.getItem('ad_active') === 'true') {
-                    location.reload(); // ফিরে আসা মাত্র রিলোড নিবে
-                }
+                if (localStorage.getItem('ad_active') === 'true') location.reload();
             }
         });
-
-        // রিলোড শেষ হওয়ার পর রেজাল্ট চেক
-        window.onload = checkAssistant;
 
     </script>
 </body>
