@@ -41,6 +41,7 @@
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
         .locked-btn { background: #555 !important; cursor: not-allowed; }
 
+        /* টাইমার পপ-আপ ডিজাইন */
         #verify-overlay { 
             display: none; 
             position: fixed; 
@@ -53,23 +54,15 @@
             align-items: center; 
             text-align: center; 
         }
-        .verify-box { background: white; color: #333; padding: 45px 25px; border-radius: 35px; width: 85%; max-width: 320px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .verify-box { background: white; color: #333; padding: 40px 20px; border-radius: 35px; width: 85%; max-width: 300px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         
-        /* টাইমার সার্কেল স্টাইল */
-        .timer-display { 
-            font-size: 40px; 
-            font-weight: bold; 
+        /* কাউন্টডাউন নম্বর স্টাইল */
+        #countdown-number { 
+            font-size: 60px; 
+            font-weight: 900; 
             color: #e63946; 
-            margin-bottom: 15px;
-            width: 80px;
-            height: 80px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #e63946;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
+            margin: 20px 0;
+            font-family: 'Arial', sans-serif;
         }
     </style>
 </head>
@@ -77,9 +70,9 @@
 
     <div id="verify-overlay">
         <div class="verify-box">
-            <div id="timer-circle" class="timer-display">১০</div>
-            <h2 style="color: #e63946; margin: 0 0 12px;">অ্যাড যাচাই হচ্ছে...</h2>
-            <p id="timer-info" style="font-size: 14px; color: #666; line-height: 1.5;">বাকি সময়টুকু অ্যাড পেজে অবস্থান করুন।</p>
+            <h2 style="color: #222; margin: 0;">বিজ্ঞাপন যাচাই...</h2>
+            <div id="countdown-number">১০</div>
+            <p style="font-size: 14px; color: #666; line-height: 1.5; padding: 0 10px;">অ্যাড পেজে অবস্থান করুন। ফিরে আসার সাথে সাথে ফলাফল পাবেন।</p>
         </div>
     </div>
 
@@ -109,6 +102,7 @@
 
         let allVideos = {};
         let currentCategory = "All";
+        let timerInterval = null;
 
         db.ref('videos').on('value', (snap) => {
             allVideos = snap.val() || {};
@@ -142,8 +136,8 @@
                 let step = parseInt(localStorage.getItem('step_' + v.id)) || 0;
                 const total = v.ads ? v.ads.length : 0;
 
-                let btnTxt = "🔒 UNLOCK VIDEO", btnClass = "unlock-btn", stepTxt = `ধাপ: ${step}/${total} 🚀`;
-                if (isLocked) { btnTxt = "🚫 ইনবক্স চেক করুন"; btnClass += " locked-btn"; stepTxt = `ধাপ: 0/${total} 🚀`; }
+                let btnTxt = "🔒 UNLOCK VIDEO", btnClass = "unlock-btn";
+                if (isLocked) { btnTxt = "🚫 ইনবক্স চেক করুন"; btnClass += " locked-btn"; }
                 else if (step >= total) { btnTxt = "📥 GET DOWNLOAD VIDEO"; btnClass += " download-btn"; }
                 
                 container.innerHTML += `
@@ -151,37 +145,28 @@
                         <div class="thumb-box"><img src="${v.photo}"></div>
                         <div class="card-details">
                             <h3 class="video-title">${v.name}</h3>
-                            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:bold;">
-                                <span style="color:#e63946">${stepTxt}</span>
-                                <span style="background:#f0f0f0;padding:2px 8px;border-radius:5px">${v.category}</span>
-                            </div>
+                            <p style="font-size:12px;color:#e63946;font-weight:bold;margin-bottom:10px;">ধাপ: ${step}/${total}</p>
                             <button class="${btnClass}" onclick='handleAction("${v.id}", ${JSON.stringify(v.ads)})'>${btnTxt}</button>
                         </div>
                     </div>`;
             }
         }
 
-        // টাইমার চেক ফাংশন - পেজ লোড হলে বা ফিরে আসলে রান হবে
-        function checkTimerStatus() {
-            if (localStorage.getItem('ad_active') === 'true') {
-                const startTime = parseInt(localStorage.getItem('start_time'));
-                const timePassed = Math.floor((Date.now() - startTime) / 1000);
-                const remaining = REQUIRED_SEC - timePassed;
-
-                if (remaining > 0) {
-                    // যদি সময় বাকি থাকে, টাইমার ওভারলে দেখাবে
-                    document.getElementById('verify-overlay').style.display = 'flex';
-                    document.getElementById('timer-circle').innerText = remaining;
-                    document.getElementById('timer-info').innerText = "আপনি মাত্র " + timePassed + " সেকেন্ড ছিলেন। আরও " + remaining + " সেকেন্ড বাকি।";
-                    
-                    // ২ সেকেন্ডের সেফটি ডিলে চেক (অ্যাড লোড হওয়ার সময়)
-                    if (Date.now() - startTime > 3500) {
-                         verifyResult(timePassed, remaining);
-                    }
+        function startVisualTimer() {
+            clearInterval(timerInterval);
+            const startTime = parseInt(localStorage.getItem('start_time'));
+            
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const remaining = REQUIRED_SEC - elapsed;
+                
+                if (remaining >= 0) {
+                    document.getElementById('countdown-number').innerText = remaining;
                 } else {
-                    verifyResult(timePassed, 0);
+                    document.getElementById('countdown-number').innerText = "0";
+                    clearInterval(timerInterval);
                 }
-            }
+            }, 500);
         }
 
         function handleAction(v_id, ads) {
@@ -197,48 +182,62 @@
                 return;
             }
 
-            // নতুন সেশন শুরু
+            // সেশন শুরু
+            const now = Date.now();
             localStorage.setItem('ad_active', 'true');
-            localStorage.setItem('start_time', Date.now().toString());
+            localStorage.setItem('start_time', now.toString());
             localStorage.setItem('active_vid', v_id);
             localStorage.setItem('active_step', step.toString());
 
             document.getElementById('verify-overlay').style.display = 'flex';
-            document.getElementById('timer-circle').innerText = REQUIRED_SEC;
+            document.getElementById('countdown-number').innerText = REQUIRED_SEC;
             
+            startVisualTimer();
             tg.openLink(ads[step]);
         }
 
-        function verifyResult(timePassed, remaining) {
-            localStorage.removeItem('ad_active');
-            document.getElementById('verify-overlay').style.display = 'none';
+        function verifyResult() {
+            if (localStorage.getItem('ad_active') === 'true') {
+                const startTime = parseInt(localStorage.getItem('start_time'));
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const remaining = REQUIRED_SEC - elapsed;
 
-            if (remaining <= 0) {
-                const vid = localStorage.getItem('active_vid');
-                const step = parseInt(localStorage.getItem('active_step'));
-                localStorage.setItem('step_' + vid, (step + 1).toString());
-                renderUI();
-                Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে।', icon: 'success' });
-                tg.HapticFeedback.notificationOccurred('success');
-            } else {
-                Swal.fire({ 
-                    title: 'ব্যর্থ!', 
-                    text: 'আপনি মাত্র ' + timePassed + ' সেকেন্ড ছিলেন। আরও ' + remaining + ' সেকেন্ড বাকি ছিল।', 
-                    icon: 'error' 
-                });
-                tg.HapticFeedback.notificationOccurred('error');
+                // UI রিসেট
+                clearInterval(timerInterval);
+                document.getElementById('verify-overlay').style.display = 'none';
+                localStorage.removeItem('ad_active');
+
+                if (elapsed >= REQUIRED_SEC) {
+                    const vid = localStorage.getItem('active_vid');
+                    const step = parseInt(localStorage.getItem('active_step'));
+                    localStorage.setItem('step_' + vid, (step + 1).toString());
+                    renderUI();
+                    Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে।', icon: 'success' });
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    Swal.fire({ 
+                        title: 'ব্যর্থ!', 
+                        text: 'আপনি মাত্র ' + elapsed + ' সেকেন্ড ছিলেন। আরও ' + remaining + ' সেকেন্ড বাকি ছিল।', 
+                        icon: 'error' 
+                    });
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+                localStorage.removeItem('start_time');
             }
-            localStorage.removeItem('start_time');
         }
 
-        // ইভেন্টস
-        window.addEventListener('focus', checkTimerStatus);
+        window.addEventListener('focus', verifyResult);
         document.addEventListener("visibilitychange", function() {
-            if (document.visibilityState === 'visible') checkTimerStatus();
+            if (document.visibilityState === 'visible') verifyResult();
         });
-        
-        // পেজ রিলোড হলেও টাইমার চেক করবে
-        window.onload = checkTimerStatus;
+
+        // যদি পেজ লোড হয় এবং কোনো অ্যাড সেশন চালু থাকে
+        window.onload = () => {
+            if (localStorage.getItem('ad_active') === 'true') {
+                document.getElementById('verify-overlay').style.display = 'flex';
+                startVisualTimer();
+            }
+        };
 
     </script>
 </body>
