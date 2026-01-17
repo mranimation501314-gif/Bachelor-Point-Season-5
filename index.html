@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point Season 5 - Ultimate Final Fix</title>
+    <title>Bachelor Point Season 5 - Ultimate Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -64,7 +64,7 @@
         <div class="verify-box">
             <div class="loader-ring"></div>
             <h2 style="color: #e63946; margin: 0 0 12px;">অ্যাড যাচাই হচ্ছে...</h2>
-            <p style="font-size: 14px; color: #666; line-height: 1.5;">অ্যাড পেজে ১০ সেকেন্ড অবস্থান করুন। ব্রাউজার ক্রস করলে অটোমেটিক চেক হবে।</p>
+            <p style="font-size: 14px; color: #666; line-height: 1.5;">অ্যাড পেজে ১০ সেকেন্ড অবস্থান করুন। ফিরে আসার সাথে সাথে ফলাফল পাবেন।</p>
         </div>
     </div>
 
@@ -177,70 +177,87 @@
             const total = ads ? ads.length : 0;
 
             if (step >= total) {
-                // ডাউনলোড বাটনের অ্যালার্ট ফিক্স
                 Swal.fire({
                     title: 'ইনবক্স চেক করুন!',
-                    text: 'ডাউনলোড লিঙ্কটি টেলিগ্রাম বটের ইনবক্সে পাঠানো হয়েছে।',
+                    text: 'ডাউনলোড লিঙ্কটি আপনার টেলিগ্রাম বটের ইনবক্সে পাঠানো হয়েছে।',
                     icon: 'success',
-                    confirmButtonText: 'ঠিক আছে'
-                }).then(() => {
-                    localStorage.setItem('time_' + v_id, Date.now());
-                    window.location.href = `https://t.me/${BOT_USERNAME}?start=${v_id}`;
+                    confirmButtonText: 'ঠিক আছে',
+                    confirmButtonColor: '#00c853'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        localStorage.setItem('time_' + v_id, Date.now());
+                        window.location.href = `https://t.me/${BOT_USERNAME}?start=${v_id}`;
+                    }
                 });
                 return;
             }
 
-            // লিঙ্ক ওপেন হওয়ার পরে ট্র্যাকিং শুরু করার ফিক্স
+            // ট্র্যাকিং শুরু
             document.getElementById('verify-overlay').style.display = 'flex';
             
-            // লিঙ্কটি ওপেন হওয়ার জন্য একটু সময় দেওয়া
+            // লিঙ্ক ওপেন করার আগে সামান্য সময় নেওয়া
             setTimeout(() => {
                 localStorage.setItem('ad_active', 'true');
-                localStorage.setItem('start_time', Date.now());
+                localStorage.setItem('start_time', Date.now().toString());
                 localStorage.setItem('active_vid', v_id);
-                localStorage.setItem('active_step', step);
+                localStorage.setItem('active_step', step.toString());
                 tg.openLink(ads[step]);
-            }, 800); 
+            }, 500);
         }
 
         function verifyLogic() {
             if (localStorage.getItem('ad_active') === 'true') {
                 const startTime = parseInt(localStorage.getItem('start_time'));
-                const timeDiff = Math.floor((Date.now() - startTime) / 1000);
+                const currentTime = Date.now();
+                const timeDiff = Math.floor((currentTime - startTime) / 1000);
 
+                // ফিক্স ১: ৩ সেকেন্ডের আগে কোনো চেক হবে না (ফেসবুক বা বাইরের অ্যাপ ওপেন হওয়ার সময় দিতে)
+                if (currentTime - startTime < 3000) return;
+
+                // ফিক্স ২: যদি ইউজার ফিরে আসে তবে ওভারলে লুকানো এবং চেক করা
                 document.getElementById('verify-overlay').style.display = 'none';
                 localStorage.removeItem('ad_active');
 
                 if (timeDiff >= REQUIRED_SEC) {
                     const vid = localStorage.getItem('active_vid');
                     const step = parseInt(localStorage.getItem('active_step'));
-                    localStorage.setItem('step_' + vid, step + 1);
+                    localStorage.setItem('step_' + vid, (step + 1).toString());
                     renderUI();
-                    Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে।', icon: 'success' });
+                    Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে। অভিনন্দন!', icon: 'success', confirmButtonColor: '#00c853' });
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
-                    const rem = REQUIRED_SEC - timeDiff;
+                    const remaining = REQUIRED_SEC - timeDiff;
                     Swal.fire({ 
                         title: 'ব্যর্থ!', 
-                        text: 'আপনি ১০ সেকেন্ড ছিলেন না। আরও ' + rem + ' সেকেন্ড বাকি ছিল।', 
-                        icon: 'error' 
+                        text: 'আপনি ১০ সেকেন্ড অপেক্ষা করেননি। আরও ' + remaining + ' সেকেন্ড বাকি ছিল।', 
+                        icon: 'error', 
+                        confirmButtonColor: '#e63946' 
                     });
                     tg.HapticFeedback.notificationOccurred('error');
                 }
+                
                 localStorage.removeItem('start_time');
+                localStorage.removeItem('active_vid');
+                localStorage.removeItem('active_step');
             }
         }
 
-        // ইন-অ্যাপ ব্রাউজার ক্রস করলে বা ফিরে আসলে ট্রিগার
-        window.onfocus = verifyLogic;
+        // স্ক্রিন ফোকাস এবং দৃশ্যমানতা ট্র্যাকিং
+        window.addEventListener('focus', verifyLogic);
         document.addEventListener("visibilitychange", function() {
-            if (document.visibilityState === 'visible') verifyLogic();
+            if (document.visibilityState === 'visible') {
+                verifyLogic();
+            }
         });
 
-        // ব্যাকআপ পোলিং
+        // ফিক্স ৩: ইন-অ্যাপ ব্রাউজারের জন্য কঠোর নজরদারি (১ সেকেন্ড পর পর চেক করবে)
         setInterval(() => {
             if (localStorage.getItem('ad_active') === 'true' && document.hasFocus()) {
-                verifyLogic();
+                const startTime = parseInt(localStorage.getItem('start_time'));
+                // ১ সেকেন্ড অপেক্ষা করার পর চেক শুরু করবে যাতে ভুল অ্যালার্ট না আসে
+                if (Date.now() - startTime > 1500) { 
+                    verifyLogic();
+                }
             }
         }, 1000);
 
