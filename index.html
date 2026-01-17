@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point S5 - Admin Pro Panel</title>
+    <title>Bachelor Point S5 - Final Panel</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -12,7 +12,7 @@
     <style>
         :root { --primary: #e63946; --secondary: #1d3557; --bg: #f0f2f5; --white: #ffffff; }
         
-        /* ডিফল্টভাবে কপি করা বন্ধ রাখা হয়েছে */
+        /* পুরো বডিতে কপি বন্ধ */
         body { 
             background: var(--bg); color: #222; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -22,10 +22,11 @@
             -webkit-tap-highlight-color: transparent; 
         }
         
-        /* এডমিন যদি লগইন থাকে তবে টাইটেল কপি করা যাবে */
-        .admin-mode .video-title { 
+        /* শুধুমাত্র ভিডিও টাইটেলটি সবাই কপি করতে পারবে */
+        .video-title { 
             user-select: text !important; 
             -webkit-user-select: text !important; 
+            cursor: text;
         }
         
         /* Header Section */
@@ -39,21 +40,21 @@
         
         /* Search Box */
         .search-container { padding: 0 20px 15px; }
-        .search-box { width: 100%; padding: 15px; border-radius: 18px; border: 2px solid #ddd; font-size: 16px; outline: none; box-sizing: border-box; background: white; transition: 0.3s; }
+        .search-box { width: 100%; padding: 15px; border-radius: 18px; border: 2px solid #ddd; font-size: 16px; outline: none; box-sizing: border-box; background: white; }
 
-        /* Video Display Grid */
+        /* Grid Content */
         .main-content { padding: 10px 20px 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .card { background: var(--white); border-radius: 25px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align: center; padding-bottom: 20px; border: 1px solid #f0f0f0; }
         .thumb-box { width: 100%; height: 170px; overflow: hidden; }
         .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
         
         .card-details { padding: 15px; }
-        .video-title { margin: 5px 0 10px; font-size: 17px; color: #333; height: 40px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .video-title { margin: 5px 0 10px; font-size: 17px; color: #333; height: 40px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         
         .unlock-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 14px; width: 95%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 15px; }
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
 
-        /* ভেরিফিকেশন পপ-আপ */
+        /* Overlay */
         #verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; }
         .verify-box { background: white; color: #333; padding: 40px 25px; border-radius: 35px; width: 85%; max-width: 320px; text-align: center; }
         .loader-ring { width: 55px; height: 55px; border: 6px solid #f3f3f3; border-top: 6px solid #e63946; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
@@ -90,17 +91,9 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // এডমিন লিস্ট (আপনার আইডিগুলো এখানে দিন)
-        const ADMIN_IDS = [6856009995, 7486776029]; 
         const BOT_USERNAME = "Bachelor_Point_Season_5_ep_bot"; 
         const LOCK_TIME = 24 * 60 * 60 * 1000; 
         const REQUIRED_SEC = 10; 
-
-        // এডমিন প্রোটেকশন চেক
-        const currentUserId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
-        if (ADMIN_IDS.includes(currentUserId)) {
-            document.body.classList.add('admin-mode');
-        }
 
         let allVideos = {};
         let currentCategory = "All";
@@ -198,8 +191,9 @@
                     } else {
                         localStorage.removeItem('ad_active');
                         document.getElementById('verify-overlay').style.display = 'none';
-                        Swal.fire('ব্যর্থ!', 'আপনি ১০ সেকেন্ড পূর্ণ করেননি।', 'error');
+                        Swal.fire('ব্যর্থ!', '১০ সেকেন্ড পূর্ণ হয়নি।', 'error');
                     }
+                    localStorage.removeItem('start_time');
                 }, 1500);
             }
         }
