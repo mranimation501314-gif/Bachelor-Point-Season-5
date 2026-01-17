@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point Season 5 - Precision High-Level Fix</title>
+    <title>Bachelor Point Season 5 - Ultimate High-Level Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -63,7 +63,7 @@
 
     <div id="verify-overlay">
         <div id="countdown-display">১০</div>
-        <div style="font-size: 14px; color: #333; font-weight: bold;">বিজ্ঞাপন যাচাই হচ্ছে... <br><span style="font-weight: normal; color: #666; font-size: 11px;">১০ সেকেন্ড পেজে থাকলে সাকসেস হবে।</span></div>
+        <div style="font-size: 14px; color: #333; font-weight: bold;">অ্যাড লোড হচ্ছে... <br><span style="font-weight: normal; color: #666; font-size: 11px;">ফিরে আসা মাত্র রেজাল্ট পাবেন।</span></div>
     </div>
 
     <div class="header-section"><h1>Bachelor Point Season 5</h1></div>
@@ -74,7 +74,7 @@
     </div>
 
     <div class="search-container">
-        <input type="number" id="videoSearch" class="search-box" placeholder="এপিসোড নাম্বার লিখুন..." onkeyup="renderUI()">
+        <input type="text" id="videoSearch" class="search-box" placeholder="এপিসোড নাম্বার লিখুন..." oninput="renderUI()">
     </div>
 
     <div class="main-content" id="video-display">লোডিং হচ্ছে...</div>
@@ -92,7 +92,6 @@
 
         let allVideos = {};
         let currentCategory = "All";
-        let liveTimer = null;
 
         db.ref('videos').on('value', (snap) => {
             allVideos = snap.val() || {};
@@ -106,14 +105,23 @@
             renderUI();
         }
 
+        // সার্চ বক্স ফিক্স: শুধুমাত্র সংখ্যা ম্যাচিং লজিক
         function renderUI() {
             const container = document.getElementById('video-display');
-            const searchInput = document.getElementById('videoSearch').value.trim();
+            const searchRaw = document.getElementById('videoSearch').value.trim();
+            const searchNum = searchRaw.replace(/\D/g, ""); // সব টেক্সট বাদ দিয়ে শুধু সংখ্যা রাখা
+            
             container.innerHTML = "";
+            
             for (let id in allVideos) {
                 const v = { ...allVideos[id], id: id };
                 if (currentCategory !== "All" && v.category !== currentCategory) continue;
-                if (searchInput !== "" && !v.name.includes(searchInput)) continue;
+
+                // যদি সার্চ বক্সে কিছু লেখা হয়, তবে ভিডিওর নামের ভেতরের সংখ্যার সাথে চেক করবে
+                if (searchNum !== "") {
+                    const videoNum = v.name.replace(/\D/g, "");
+                    if (videoNum !== searchNum) continue;
+                }
 
                 const lastTime = localStorage.getItem('time_' + v.id);
                 const currentTime = Date.now();
@@ -125,21 +133,31 @@
                 if (isLocked) { btnTxt = "🚫 ইনবক্স চেক করুন"; btnClass += " locked-btn"; }
                 else if (step >= total) { btnTxt = "📥 GET DOWNLOAD VIDEO"; btnClass += " download-btn"; }
                 
-                container.innerHTML += `<div class="card"><div class="thumb-box"><img src="${v.photo}"></div><div class="card-details"><h3 class="video-title">${v.name}</h3><div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:bold;"><span style="color:#e63946">ধাপ: ${step}/${total} 🚀</span><span style="background:#f0f0f0;padding:2px 8px;border-radius:5px">${v.category}</span></div><button class="${btnClass}" onclick='handleAction("${v.id}", ${JSON.stringify(v.ads)})'>${btnTxt}</button></div></div>`;
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="thumb-box"><img src="${v.photo}"></div>
+                        <div class="card-details">
+                            <h3 class="video-title">${v.name}</h3>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:bold;">
+                                <span style="color:#e63946">ধাপ: ${step}/${total} 🚀</span>
+                                <span style="background:#f0f0f0;padding:2px 8px;border-radius:5px">${v.category}</span>
+                            </div>
+                            <button class="${btnClass}" onclick='handleAction("${v.id}", ${JSON.stringify(v.ads)})'>${btnTxt}</button>
+                        </div>
+                    </div>`;
             }
         }
 
         function handleAction(v_id, ads) {
             const lastTime = localStorage.getItem('time_' + v_id);
-            const currentTime = Date.now();
-            if (lastTime && (currentTime - lastTime < LOCK_TIME)) {
-                Swal.fire({ title: 'লক!', text: '২৪ ঘণ্টা পর আবার চেষ্টা করুন।', icon: 'warning' });
+            if (lastTime && (Date.now() - lastTime < LOCK_TIME)) {
+                Swal.fire({ title: 'লক!', text: 'লিঙ্ক ইনবক্সে পাঠানো হয়েছে। ২৪ ঘণ্টা পর আবার ট্রাই করুন।', icon: 'warning' });
                 return;
             }
 
             let step = parseInt(localStorage.getItem('step_' + v_id)) || 0;
             if (step >= ads.length) {
-                Swal.fire({ title: 'ইনবক্স চেক করুন!', text: 'লিঙ্কটি ইনবক্সে পাঠানো হয়েছে।', icon: 'success' }).then(() => {
+                Swal.fire({ title: 'ইনবক্স চেক করুন!', text: 'ভিডিও লিঙ্কটি বটের ইনবক্সে পাঠানো হয়েছে।', icon: 'success' }).then(() => {
                     localStorage.setItem('time_' + v_id, Date.now());
                     localStorage.setItem('step_' + v_id, '0');
                     window.location.href = `https://t.me/${BOT_USERNAME}?start=${v_id}`;
@@ -153,72 +171,50 @@
             localStorage.setItem('active_step', step.toString());
 
             document.getElementById('verify-overlay').style.display = 'flex';
-            
-            // টাইমার স্টার্ট
-            runLiveTimer();
-            
             tg.openLink(ads[step]);
         }
 
-        function runLiveTimer() {
-            clearInterval(liveTimer);
-            liveTimer = setInterval(() => {
-                if (localStorage.getItem('ad_active') === 'true') {
-                    const start = parseInt(localStorage.getItem('start_time'));
-                    const elapsed = Math.floor((Date.now() - start) / 1000);
-                    const rem = REQUIRED_SEC - elapsed;
-                    
-                    document.getElementById('countdown-display').innerText = rem > 0 ? rem : 0;
-                    
-                    // সাকসেস লজিক: ১০ সেকেন্ড পূর্ণ হলে রিলোড ছাড়াই সাকসেস
-                    if (elapsed >= REQUIRED_SEC) {
-                        clearInterval(liveTimer);
-                        verifyResult();
-                    }
-                }
-            }, 1000);
-        }
-
-        function verifyResult() {
+        // ফিরে আসা মাত্র রিলোড এবং নোটিশ লজিক
+        function checkAssistant() {
             if (localStorage.getItem('ad_active') === 'true') {
                 const startTime = parseInt(localStorage.getItem('start_time'));
                 const now = Date.now();
                 const actualDiff = Math.floor((now - startTime) / 1000);
+                const remaining = REQUIRED_SEC - actualDiff;
 
-                // রিলোড লজিক: ৪ সেকেন্ডের সেফটি চেক
-                if (now - startTime < 4000 && !document.hidden) return;
-
-                document.getElementById('verify-overlay').style.display = 'none';
+                // সেশন পরিষ্কার করা যাতে বার বার নোটিশ না আসে
                 localStorage.removeItem('ad_active');
-                clearInterval(liveTimer);
+                localStorage.removeItem('start_time');
+                document.getElementById('verify-overlay').style.display = 'none';
 
                 if (actualDiff >= REQUIRED_SEC) {
                     const vid = localStorage.getItem('active_vid');
                     const step = localStorage.getItem('active_step');
                     localStorage.setItem('step_' + vid, (parseInt(step) + 1).toString());
                     renderUI();
-                    Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে।', icon: 'success' });
-                    tg.HapticFeedback.notificationOccurred('success');
+                    Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে। অভিনন্দন!', icon: 'success' });
                 } else {
-                    // রিলোড হওয়ার পর রেজাল্ট এলার্ট
-                    const remaining = REQUIRED_SEC - actualDiff;
+                    // আপনি যেমন চেয়েছেন: কত সেকেন্ড হয়েছে এবং কত সেকেন্ড বাকি ছিল তা জানানো
                     Swal.fire({ 
-                        title: 'ব্যর্থ!', 
-                        text: `আপনি ${actualDiff} সেকেন্ড বিজ্ঞাপন দেখেছেন। আরও ${remaining} সেকেন্ড বাকি ছিল।`, 
-                        icon: 'error' 
+                        title: 'বিজ্ঞাপন রিপোর্ট', 
+                        text: `আপনি মাত্র ${actualDiff} সেকেন্ড ছিলেন। ১০ সেকেন্ড পূর্ণ হতে আরও ${remaining} সেকেন্ড অপেক্ষা করতে হবে।`, 
+                        icon: 'error'
                     });
-                    tg.HapticFeedback.notificationOccurred('error');
                 }
-                localStorage.removeItem('start_time');
             }
         }
 
-        // রিলোড বা ফিরে আসা শনাক্ত করা
-        window.onload = verifyResult;
-        window.onfocus = verifyResult;
+        // অ্যাপে ফিরে আসা মাত্র রিলোড ট্রিগার
         document.addEventListener("visibilitychange", function() {
-            if (document.visibilityState === 'visible') verifyResult();
+            if (document.visibilityState === 'visible') {
+                if (localStorage.getItem('ad_active') === 'true') {
+                    location.reload(); // ফিরে আসা মাত্র রিলোড নিবে
+                }
+            }
         });
+
+        // রিলোড শেষ হওয়ার পর রেজাল্ট চেক
+        window.onload = checkAssistant;
 
     </script>
 </body>
