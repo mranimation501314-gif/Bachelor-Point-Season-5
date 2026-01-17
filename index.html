@@ -170,7 +170,7 @@
             if (step >= total) {
                 Swal.fire({
                     title: 'ইনবক্স চেক করুন!',
-                    text: 'ডাউনলোড লিঙ্কটি আপনার টেলিগ্রাম বটের ইনবক্সে পাঠানো হয়েছে।',
+                    text: 'ডাউনলোড লিঙ্কটি টেলিগ্রাম বটের ইনবক্সে পাঠানো হয়েছে।',
                     icon: 'success',
                     confirmButtonText: 'ঠিক আছে',
                     confirmButtonColor: '#00c853'
@@ -183,20 +183,20 @@
                 return;
             }
 
-            // প্রতিবার ক্লিকে আগের পুরাতন ট্র্যাকিং ডেটা সম্পূর্ণ পরিষ্কার করা
+            // নতুন করে টাইমার সেট করার জন্য আগের সেশন ডেটা মুছে ফেলা
             localStorage.removeItem('ad_active');
             localStorage.removeItem('start_time');
             localStorage.removeItem('active_vid');
             localStorage.removeItem('active_step');
 
-            // ওভারলে দেখানো
+            // পপ-আপ ওভারলে দেখানো
             document.getElementById('verify-overlay').style.display = 'flex';
             
-            // নতুন সেশন শুরু
+            // লিঙ্ক ওপেন করার ঠিক মুহূর্তের সময় রেকর্ড করা
             setTimeout(() => {
-                const now = Date.now();
+                const startTime = Date.now();
                 localStorage.setItem('ad_active', 'true');
-                localStorage.setItem('start_time', now.toString());
+                localStorage.setItem('start_time', startTime.toString());
                 localStorage.setItem('active_vid', v_id);
                 localStorage.setItem('active_step', step.toString());
                 tg.openLink(ads[step]);
@@ -208,17 +208,17 @@
                 const startTime = parseInt(localStorage.getItem('start_time'));
                 const currentTime = Date.now();
                 
-                // সেফটি ডিলে: ৩ সেকেন্ডের আগে ভুল ভেরিফিকেশন এড়াতে
-                if (currentTime - startTime < 3000) return;
+                // ক্লিক করার ৪ সেকেন্ডের মধ্যে ফিরে আসলে ইগনোর করা হবে (লিঙ্ক লোড হওয়ার সময়)
+                if (currentTime - startTime < 4000) return;
 
-                // প্রতিবার ক্লিক করার পর ইউজার ঠিক কত সেকেন্ড ছিল তা নতুনভাবে বিয়োগ করা হচ্ছে
-                const actualTimeDiffSec = Math.floor((currentTime - startTime) / 1000);
+                // প্রতিবার নতুনভাবে বিয়োগ করে নিখুঁত সেকেন্ড বের করা
+                const timeDiffSec = Math.floor((currentTime - startTime) / 1000);
 
-                // সাথে সাথে স্ট্যাটাস ক্লিয়ার যাতে আগের রিপোর্ট রিপিট না হয়
+                // সাথে সাথে স্ট্যাটাস ক্লিয়ার করা যাতে একই ডেটা বারবার না আসে
                 localStorage.removeItem('ad_active');
                 document.getElementById('verify-overlay').style.display = 'none';
 
-                if (actualTimeDiffSec >= REQUIRED_SEC) {
+                if (timeDiffSec >= REQUIRED_SEC) {
                     const vid = localStorage.getItem('active_vid');
                     const step = parseInt(localStorage.getItem('active_step'));
                     localStorage.setItem('step_' + vid, (step + 1).toString());
@@ -226,11 +226,11 @@
                     Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে। অভিনন্দন!', icon: 'success', confirmButtonColor: '#00c853' });
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
-                    const rem = REQUIRED_SEC - actualTimeDiffSec;
-                    // ইউজারকে নির্ভুলভাবে জানানো যে সে এই প্রচেষ্টায় কত সেকেন্ড ছিল
+                    const remaining = REQUIRED_SEC - timeDiffSec;
+                    // ইউজারকে নির্ভুলভাবে জানানো যে সে ঠিক কতক্ষণ বাইরে ছিল
                     Swal.fire({ 
                         title: 'ব্যর্থ!', 
-                        text: 'আপনি এইবার মাত্র ' + actualTimeDiffSec + ' সেকেন্ড ছিলেন। আরও ' + rem + ' সেকেন্ড বাকি ছিল।', 
+                        text: 'আপনি মাত্র ' + timeDiffSec + ' সেকেন্ড অপেক্ষা করেছেন। আরও ' + remaining + ' সেকেন্ড বাকি ছিল।', 
                         icon: 'error', 
                         confirmButtonColor: '#e63946' 
                     });
@@ -250,11 +250,11 @@
             if (document.visibilityState === 'visible') verifyLogic();
         });
 
-        // পোলিং সিস্টেম (ইন-অ্যাপ ব্রাউজার ক্রস করলে সাথে সাথে রেজাল্ট দিতে)
+        // পোলিং সিস্টেম (ইন-অ্যাপ ব্রাউজারের ওভারলে কাটার সাথে সাথে চেক করবে)
         setInterval(() => {
             if (localStorage.getItem('ad_active') === 'true' && document.hasFocus()) {
-                const checkTime = parseInt(localStorage.getItem('start_time'));
-                if (Date.now() - checkTime > 4000) { 
+                const checkStartTime = parseInt(localStorage.getItem('start_time'));
+                if (Date.now() - checkStartTime > 4500) { 
                     verifyLogic();
                 }
             }
