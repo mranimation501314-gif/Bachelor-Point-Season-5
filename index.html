@@ -3,37 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point S5 - Sorted Panel</title>
+    <title>Bachelor Point S5 - Episode Search Panel</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <style>
         :root { --primary: #e63946; --secondary: #1d3557; --bg: #f0f2f5; --white: #ffffff; }
-        body { background: var(--bg); color: #222; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-        .header-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 40px 20px 60px; text-align: center; color: white; border-radius: 0 0 45px 45px; }
+        body { background: var(--bg); color: #222; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; user-select: none; }
+        
+        .header-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 45px 20px 65px; text-align: center; color: white; border-radius: 0 0 45px 45px; }
+        
         .category-bar { display: flex; justify-content: center; padding: 12px; background: var(--white); margin: -30px 15px 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: sticky; top: 10px; z-index: 100; overflow-x: auto; gap: 8px; }
-        .cat-btn { padding: 10px 18px; border-radius: 15px; border: 1.5px solid var(--primary); background: transparent; color: var(--primary); font-weight: 700; cursor: pointer; font-size: 13px; }
+        .cat-btn { padding: 10px 18px; border-radius: 15px; border: 1.5px solid var(--primary); background: transparent; color: var(--primary); font-weight: 700; cursor: pointer; font-size: 13px; white-space: nowrap; }
         .cat-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; }
+        
         .search-container { padding: 0 20px 15px; }
-        .search-box { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #ddd; font-size: 16px; outline: none; box-sizing: border-box; }
+        .search-box { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #ddd; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; }
+        .search-box:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(230, 57, 70, 0.2); }
+
         .main-content { padding: 10px 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: var(--white); border-radius: 25px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .thumb-box { width: 100%; height: 200px; }
+        .card { background: var(--white); border-radius: 25px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; padding-bottom: 20px; }
+        .thumb-box { width: 100%; height: 180px; overflow: hidden; }
         .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-        .card-details { padding: 20px; text-align: center; }
-        .unlock-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 14px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        
+        .card-details { padding: 15px; }
+        .unlock-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 14px; width: 90%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .unlock-btn:active { transform: scale(0.95); }
         .download-btn { background: linear-gradient(135deg, #00c853, #007a33) !important; }
-        #timer-overlay { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.95); color: white; padding: 20px; border-radius: 25px; z-index: 10000; text-align: center; width: 85%; max-width: 350px; }
-        .progress-bar { width: 100%; height: 8px; background: #333; margin-top: 15px; border-radius: 10px; overflow: hidden; }
-        #bar-fill { width: 0%; height: 100%; background: #00c853; transition: 0.3s; }
+
+        #timer-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.92); z-index: 10000; flex-direction: column; 
+            justify-content: center; align-items: center; color: white; 
+        }
+        .timer-box { background: #fff; color: #333; padding: 30px; border-radius: 25px; text-align: center; width: 85%; max-width: 320px; }
+        .progress-bar { width: 100%; height: 12px; background: #eee; border-radius: 10px; margin-top: 20px; overflow: hidden; }
+        #bar-fill { width: 0%; height: 100%; background: #00c853; transition: 0.1s linear; }
+        #time-text { font-size: 40px; font-weight: 900; color: #e63946; }
     </style>
 </head>
 <body>
 
     <div id="timer-overlay">
-        <span>অপেক্ষা করুন: <span id="time-left" style="color:#00c853; font-size: 22px;">10</span> সেকেন্ড</span>
-        <div class="progress-bar"><div id="bar-fill"></div></div>
+        <div class="timer-box">
+            <div style="font-weight: bold; color: #555;">বিজ্ঞাপন চলছে...</div>
+            <div id="time-text">10</div>
+            <div class="progress-bar"><div id="bar-fill"></div></div>
+            <p style="font-size: 12px; margin-top: 15px; color: #888;">১০ সেকেন্ড অপেক্ষা করুন</p>
+        </div>
     </div>
 
     <div class="header-section"><h1>BACHELOR POINT S5 🎬</h1></div>
@@ -44,36 +63,30 @@
     </div>
 
     <div class="search-container">
-        <input type="text" id="videoSearch" class="search-box" placeholder="ভিডিও খুঁজুন..." onkeyup="renderUI()">
+        <input type="number" id="videoSearch" class="search-box" placeholder="এপিসোড নাম্বার লিখুন (উদা: 5)..." onkeyup="renderUI()">
     </div>
 
     <div class="main-content" id="video-display">লোডিং...</div>
 
     <script>
-        // আপনার ফায়ারবেজ কনফিগ
         const firebaseConfig = { databaseURL: "https://bachelor-point-season-5-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
         let allVideos = {};
         let currentCategory = "All";
         let timerInterval = null;
+        const WAIT_TIME = 10;
 
-        // লোকাল স্টোরেজ থেকে ধাপ চেক করা
         function getCurrentStep(v_id) {
-            const expiry = localStorage.getItem('expiry_' + v_id);
-            if (expiry && Date.now() > parseInt(expiry)) {
-                localStorage.removeItem('step_' + v_id);
-                localStorage.removeItem('expiry_' + v_id);
-                return 0;
-            }
             return parseInt(localStorage.getItem('step_' + v_id)) || 0;
         }
 
         db.ref('videos').on('value', (snap) => {
             allVideos = snap.val() || {};
             renderUI();
-            checkExistingTimer();
         });
 
         function filterCat(cat, btn) {
@@ -83,18 +96,27 @@
             renderUI();
         }
 
-        // ইউআই রেন্ডার লজিক (শুধুমাত্র BP S5 এর জন্য ফিল্টার করা)
+        // --- স্মার্ট এপিসোড সার্চ লজিক ---
         function renderUI() {
             const container = document.getElementById('video-display');
-            const searchInput = document.getElementById('videoSearch').value.toLowerCase();
+            const searchInput = document.getElementById('videoSearch').value.trim();
             container.innerHTML = "";
             
             for (let id in allVideos) {
                 const v = { ...allVideos[id], id: id };
                 
-                // সার্চ এবং ক্যাটাগরি ফিল্টার
-                if (!v.name.toLowerCase().includes(searchInput)) continue;
+                // ১. ক্যাটাগরি চেক
                 if (currentCategory !== "All" && v.category !== currentCategory) continue;
+
+                // ২. সার্চ ফিল্টারিং (এপিসোড নাম্বার লজিক)
+                if (searchInput !== "") {
+                    // টাইটেল থেকে 'Episode' বা 'Ep' এর পরের নাম্বারটি খুঁজে বের করা
+                    const regex = /(?:episode|ep|এপিসোড)\s*(\d+)/i;
+                    const match = v.name.match(regex);
+                    
+                    // যদি টাইটেলে এপিসোড নাম্বার না মিলে অথবা ইউজারের নাম্বারের সাথে না মিলে, তবে স্কিপ করবে
+                    if (!match || match[1] !== searchInput) continue;
+                }
 
                 const step = getCurrentStep(v.id);
                 const total = v.ads ? v.ads.length : 0;
@@ -106,73 +128,73 @@
                         <div class="thumb-box"><img src="${v.photo}"></div>
                         <div class="card-details">
                             <h3>${v.name}</h3>
-                            <button id="btn-${v.id}" class="${btnClass}" onclick='handleAdClick("${v.id}", ${JSON.stringify(v.ads)}, "${v.name}")'>${btnTxt}</button>
-                            <span style="display:block; margin-top:12px; font-weight:bold; color:#666;">
-                                ${step >= total ? '✅ আনলক সফল' : 'ধাপ: ' + step + '/' + total} | ${v.category}
-                            </span>
+                            <button class="${btnClass}" onclick='handleAd("${v.id}", ${JSON.stringify(v.ads)})'>${btnTxt}</button>
+                            <p style="margin-top:10px; font-size:12px; color:#666;">ধাপ: ${step}/${total} | ${v.category}</p>
                         </div>
                     </div>`;
             }
         }
 
-        // অ্যাড ক্লিক লজিক
-        function handleAdClick(v_id, ads, v_name) {
+        function handleAd(v_id, ads) {
             let step = getCurrentStep(v_id);
-            const bot_username = "bachelor_point_s5_bot"; // আপনার বটের ইউজারনেম এখানে দিন
-
             if (step >= (ads ? ads.length : 0)) {
-                Swal.fire({
-                    title: 'ইনবক্স চেক করুন!',
-                    text: `আপনি ইতিমধ্যে "${v_name}" ভিডিওটি আনলক করেছেন। ২৪ ঘণ্টা পর আবার নতুন করে নিতে পারবেন।`,
-                    icon: 'success',
-                    confirmButtonText: 'বটে যান',
-                    confirmButtonColor: '#e63946'
-                }).then(() => {
-                    localStorage.setItem('expiry_' + v_id, Date.now() + (24 * 60 * 60 * 1000));
-                    window.location.href = "https://t.me/" + bot_username + "?start=" + v_id;
-                });
+                window.location.href = `https://t.me/bachelor_point_s5_bot?start=${v_id}`;
                 return;
             }
-            
-            if (localStorage.getItem('timer_running')) return;
 
-            window.open(ads[step], '_blank'); // অ্যাড লিঙ্ক ওপেন
-            localStorage.setItem('timer_end', Date.now() + 10000); // ১০ সেকেন্ড টাইমার
-            localStorage.setItem('timer_v_id', v_id);
-            localStorage.setItem('timer_running', 'true');
-            runTimerLogic();
+            localStorage.setItem('click_time', Date.now());
+            localStorage.setItem('active_v_id', v_id);
+            localStorage.setItem('active_step', step);
+
+            tg.openLink(ads[step]);
+            startTimer(v_id, step, WAIT_TIME);
         }
 
-        function checkExistingTimer() {
-            if (localStorage.getItem('timer_running') === 'true') runTimerLogic();
-        }
-
-        // টাইমার প্রগ্রেস বার লজিক
-        function runTimerLogic() {
+        function startTimer(v_id, step, remaining) {
             const overlay = document.getElementById('timer-overlay');
-            const timeSpan = document.getElementById('time-left');
+            const timeText = document.getElementById('time-text');
             const barFill = document.getElementById('bar-fill');
-            overlay.style.display = 'block';
+            
+            overlay.style.display = 'flex';
+            let timeLeft = remaining;
 
             if (timerInterval) clearInterval(timerInterval);
+            
             timerInterval = setInterval(() => {
-                const diff = parseInt(localStorage.getItem('timer_end')) - Date.now();
-                const timeLeft = Math.ceil(diff / 1000);
+                timeLeft -= 0.1;
+                timeText.innerText = Math.ceil(timeLeft);
+                barFill.style.width = ((WAIT_TIME - timeLeft) / WAIT_TIME * 100) + '%';
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    overlay.style.display = 'none';
-                    let v_id = localStorage.getItem('timer_v_id');
-                    let step = getCurrentStep(v_id) + 1;
-                    localStorage.setItem('step_' + v_id, step);
-                    localStorage.removeItem('timer_running');
-                    renderUI();
-                } else {
-                    timeSpan.innerText = timeLeft;
-                    barFill.style.width = ((10 - timeLeft) * 10) + '%';
+                    completeAd(v_id, step);
                 }
-            }, 500);
+            }, 100);
         }
+
+        function completeAd(v_id, step) {
+            document.getElementById('timer-overlay').style.display = 'none';
+            localStorage.setItem('step_' + v_id, step + 1);
+            localStorage.removeItem('active_v_id');
+            localStorage.removeItem('click_time');
+            renderUI();
+            Swal.fire('সফল!', 'পরবর্তী ধাপ আনলক হয়েছে।', 'success');
+        }
+
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState === 'visible') {
+                const activeId = localStorage.getItem('active_v_id');
+                const clickTime = localStorage.getItem('click_time');
+                const step = parseInt(localStorage.getItem('active_step'));
+
+                if (activeId && clickTime) {
+                    const diff = (Date.now() - parseInt(clickTime)) / 1000;
+                    const remaining = WAIT_TIME - diff;
+                    if (remaining <= 0) completeAd(activeId, step);
+                    else startTimer(activeId, step, remaining);
+                }
+            }
+        });
     </script>
 </body>
 </html>
