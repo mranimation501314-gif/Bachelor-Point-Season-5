@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bachelor Point Season 5 - Ultimate High-Level Fix</title>
+    <title>Bachelor Point Season 5 - Ultimate Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -53,7 +53,7 @@
             z-index: 10000; 
             padding: 10px 15px;
             box-shadow: 0 -2px 15px rgba(0,0,0,0.15);
-            border-top: 2px solid var(--primary);
+            border-top: 2.5px solid var(--primary);
             flex-direction: row;
             align-items: center;
             justify-content: center;
@@ -77,7 +77,7 @@
 
     <div id="verify-overlay">
         <div id="countdown-display">১০</div>
-        <div style="font-size: 14px; color: #333; font-weight: bold;">বিজ্ঞাপন যাচাই হচ্ছে... <span style="font-weight: normal; color: #666;"><br>অ্যাড পেজে অবস্থান করুন</span></div>
+        <div style="font-size: 14px; color: #333; font-weight: bold;">বিজ্ঞাপন যাচাই হচ্ছে... <br><span style="font-weight: normal; color: #666; font-size: 12px;">অ্যাড পেজে অবস্থান করুন।</span></div>
     </div>
 
     <div class="header-section"><h1>Bachelor Point Season 5</h1></div>
@@ -130,9 +130,8 @@
                 if (currentCategory !== "All" && v.category !== currentCategory) continue;
 
                 if (searchInput !== "") {
-                    const regex = /(?:episode|ep|এপিসোড)\s*(\d+)/i;
-                    const match = v.name.match(regex);
-                    if (!match || match[1] !== searchInput) continue;
+                    const match = v.name.match(/\d+/);
+                    if (!match || match[0] !== searchInput) continue;
                 }
 
                 const lastTime = localStorage.getItem('time_' + v.id);
@@ -162,17 +161,22 @@
 
         function handleAction(v_id, ads) {
             const lastTime = localStorage.getItem('time_' + v_id);
-            if (lastTime && (Date.now() - lastTime < LOCK_TIME)) return;
+            if (lastTime && (Date.now() - lastTime < LOCK_TIME)) {
+                Swal.fire('অপেক্ষা করুন!', 'আপনি ২৪ ঘণ্টার লক-এ আছেন। ইনবক্স চেক করুন।', 'warning');
+                return;
+            }
 
             let step = parseInt(localStorage.getItem('step_' + v_id)) || 0;
             const total = ads ? ads.length : 0;
 
             if (step >= total) {
+                // ইনবক্স নোটিশ ফিক্স
                 Swal.fire({
                     title: 'ইনবক্স চেক করুন!',
-                    text: 'ডাউনলোড লিঙ্কটি টেলিগ্রাম বটের ইনবক্সে পাঠানো হয়েছে।',
+                    text: 'ভিডিও লিঙ্কটি টেলিগ্রাম বটের ইনবক্সে পাঠানো হয়েছে।',
                     icon: 'success',
-                    confirmButtonText: 'ঠিক আছে'
+                    confirmButtonText: 'ঠিক আছে',
+                    confirmButtonColor: '#00c853'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         localStorage.setItem('time_' + v_id, Date.now());
@@ -182,7 +186,7 @@
                 return;
             }
 
-            // একদম নতুন সেশন শুরু করার জন্য আগের সব ডিলিট
+            // সেশন রিসেট ও স্টার্ট
             localStorage.removeItem('ad_active');
             localStorage.removeItem('start_time');
             
@@ -196,32 +200,28 @@
                 localStorage.setItem('active_vid', v_id);
                 localStorage.setItem('active_step', step.toString());
                 tg.openLink(ads[step]);
-                startCounting();
+                
+                clearInterval(liveTimer);
+                liveTimer = setInterval(() => {
+                    if (localStorage.getItem('ad_active') === 'true') {
+                        const start = parseInt(localStorage.getItem('start_time'));
+                        const diff = Math.floor((Date.now() - start) / 1000);
+                        const rem = REQUIRED_SEC - diff;
+                        document.getElementById('countdown-display').innerText = rem > 0 ? rem : 0;
+                    }
+                }, 1000);
             }, 600);
         }
 
-        function startCounting() {
-            clearInterval(liveTimer);
-            liveTimer = setInterval(() => {
-                if (localStorage.getItem('ad_active') === 'true') {
-                    const start = parseInt(localStorage.getItem('start_time'));
-                    const diff = Math.floor((Date.now() - start) / 1000);
-                    const rem = REQUIRED_SEC - diff;
-                    document.getElementById('countdown-display').innerText = rem > 0 ? rem : 0;
-                }
-            }, 1000);
-        }
-
-        function processResult() {
+        function verifyLogic() {
             if (localStorage.getItem('ad_active') === 'true') {
-                const start = parseInt(localStorage.getItem('start_time'));
+                const startTime = parseInt(localStorage.getItem('start_time'));
                 const now = Date.now();
-                const diffSec = Math.floor((now - start) / 1000);
+                const diffSec = Math.floor((now - startTime) / 1000);
 
-                // ক্লিক করার ৪ সেকেন্ডের মধ্যে ফিরে আসলে (অ্যাড ওপেন হওয়ার সময়) ইগনোর
-                if (now - start < 4000) return;
+                // ৪ সেকেন্ডের সেফটি ডিলে (লিঙ্ক লোড হওয়ার সময়)
+                if (now - startTime < 4000) return;
 
-                // সাথে সাথে সেশন বন্ধ যাতে ডেটা না আটকে থাকে
                 localStorage.removeItem('ad_active');
                 clearInterval(liveTimer);
                 document.getElementById('verify-overlay').style.display = 'none';
@@ -231,11 +231,10 @@
                     const step = parseInt(localStorage.getItem('active_step'));
                     localStorage.setItem('step_' + vid, (step + 1).toString());
                     renderUI();
-                    Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে।', icon: 'success' });
+                    Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে। অভিনন্দন!', icon: 'success' });
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
                     const rem = REQUIRED_SEC - diffSec;
-                    // ইউজারের প্রচেষ্টার সেকেন্ড নির্ভুলভাবে দেখানো
                     Swal.fire({ 
                         title: 'ব্যর্থ!', 
                         text: 'আপনি এইবার মাত্র ' + diffSec + ' সেকেন্ড ছিলেন। আরও ' + rem + ' সেকেন্ড বাকি ছিল।', 
@@ -247,17 +246,13 @@
             }
         }
 
-        // সবথেকে শক্তিশালী শনাক্তকরণ পদ্ধতি
-        window.onfocus = processResult;
-        document.addEventListener("visibilitychange", function() {
-            if (document.visibilityState === 'visible') processResult();
-        });
+        window.onfocus = verifyLogic;
+        document.addEventListener("visibilitychange", function() { if (document.visibilityState === 'visible') verifyLogic(); });
 
-        // পোলিং সিস্টেম (ইন-অ্যাপ ব্রাউজারের জন্য দ্রুততম চেক)
         setInterval(() => {
             if (localStorage.getItem('ad_active') === 'true' && document.hasFocus()) {
                 const checkTime = parseInt(localStorage.getItem('start_time'));
-                if (Date.now() - checkTime > 4500) processResult();
+                if (Date.now() - checkTime > 4500) verifyLogic();
             }
         }, 500);
 
