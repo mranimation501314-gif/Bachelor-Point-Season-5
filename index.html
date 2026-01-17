@@ -192,33 +192,35 @@
                 return;
             }
 
-            // ট্র্যাকিং শুরু
+            // ট্র্যাকিং ডেটা সেটআপ
             document.getElementById('verify-overlay').style.display = 'flex';
             
-            // লিঙ্ক ওপেন করার আগে সামান্য সময় নেওয়া
             setTimeout(() => {
+                const startTime = Date.now();
                 localStorage.setItem('ad_active', 'true');
-                localStorage.setItem('start_time', Date.now().toString());
+                localStorage.setItem('start_time', startTime.toString());
                 localStorage.setItem('active_vid', v_id);
                 localStorage.setItem('active_step', step.toString());
                 tg.openLink(ads[step]);
-            }, 500);
+            }, 600);
         }
 
         function verifyLogic() {
             if (localStorage.getItem('ad_active') === 'true') {
-                const startTime = parseInt(localStorage.getItem('start_time'));
+                const storedStartTime = parseInt(localStorage.getItem('start_time'));
                 const currentTime = Date.now();
-                const timeDiff = Math.floor((currentTime - startTime) / 1000);
+                
+                // ৩ সেকেন্ডের সেফটি ডিলে (লিঙ্ক ওপেন হওয়ার জন্য সময় দেওয়া)
+                if (currentTime - storedStartTime < 3000) return;
 
-                // ফিক্স ১: ৩ সেকেন্ডের আগে কোনো চেক হবে না (ফেসবুক বা বাইরের অ্যাপ ওপেন হওয়ার সময় দিতে)
-                if (currentTime - startTime < 3000) return;
+                // আসল সময় পার্থক্য বের করা
+                const timeDiffMs = currentTime - storedStartTime;
+                const timeDiffSec = Math.floor(timeDiffMs / 1000);
 
-                // ফিক্স ২: যদি ইউজার ফিরে আসে তবে ওভারলে লুকানো এবং চেক করা
                 document.getElementById('verify-overlay').style.display = 'none';
                 localStorage.removeItem('ad_active');
 
-                if (timeDiff >= REQUIRED_SEC) {
+                if (timeDiffSec >= REQUIRED_SEC) {
                     const vid = localStorage.getItem('active_vid');
                     const step = parseInt(localStorage.getItem('active_step'));
                     localStorage.setItem('step_' + vid, (step + 1).toString());
@@ -226,10 +228,10 @@
                     Swal.fire({ title: 'সফল!', text: '১০ সেকেন্ড পূর্ণ হয়েছে। অভিনন্দন!', icon: 'success', confirmButtonColor: '#00c853' });
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
-                    const remaining = REQUIRED_SEC - timeDiff;
+                    const remaining = REQUIRED_SEC - timeDiffSec;
                     Swal.fire({ 
                         title: 'ব্যর্থ!', 
-                        text: 'আপনি ১০ সেকেন্ড অপেক্ষা করেননি। আরও ' + remaining + ' সেকেন্ড বাকি ছিল।', 
+                        text: 'আপনি মাত্র ' + timeDiffSec + ' সেকেন্ড অপেক্ষা করেছেন। আরও ' + remaining + ' সেকেন্ড বাকি ছিল।', 
                         icon: 'error', 
                         confirmButtonColor: '#e63946' 
                     });
@@ -242,24 +244,21 @@
             }
         }
 
-        // স্ক্রিন ফোকাস এবং দৃশ্যমানতা ট্র্যাকিং
+        // টেলিগ্রাম ইন-অ্যাপ ব্রাউজার ফিরে আসা শনাক্ত করা
         window.addEventListener('focus', verifyLogic);
         document.addEventListener("visibilitychange", function() {
-            if (document.visibilityState === 'visible') {
-                verifyLogic();
-            }
+            if (!document.hidden) verifyLogic();
         });
 
-        // ফিক্স ৩: ইন-অ্যাপ ব্রাউজারের জন্য কঠোর নজরদারি (১ সেকেন্ড পর পর চেক করবে)
+        // শক্তিশালী পোলিং (টেলিক্রাম ইন-অ্যাপ ব্রাউজারের ওভারলে কাটার সাথে সাথে চেক করবে)
         setInterval(() => {
             if (localStorage.getItem('ad_active') === 'true' && document.hasFocus()) {
-                const startTime = parseInt(localStorage.getItem('start_time'));
-                // ১ সেকেন্ড অপেক্ষা করার পর চেক শুরু করবে যাতে ভুল অ্যালার্ট না আসে
-                if (Date.now() - startTime > 1500) { 
+                const checkStartTime = parseInt(localStorage.getItem('start_time'));
+                if (Date.now() - checkStartTime > 2500) { 
                     verifyLogic();
                 }
             }
-        }, 1000);
+        }, 500);
 
     </script>
 </body>
